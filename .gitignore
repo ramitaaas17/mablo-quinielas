@@ -9,3 +9,7 @@ build/
 backend.log
 nohup.out
 .gemini/
+uploads/*.jpg
+uploads/*.png
+uploads/*.webp
+Backend/setup_admin.py

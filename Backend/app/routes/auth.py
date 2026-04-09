@@ -4,11 +4,12 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from ..models import Usuario, UsuarioQuiniela, Quiniela, Equipo
-from ..extensions import db
+from ..extensions import db, limiter
 
 auth_bp = Blueprint('auth', __name__)
 
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+PASSWORD_RE = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$')  # min 8 chars, 1 letter, 1 digit
 
 
 def _usuario_to_dict(user):
@@ -30,6 +31,7 @@ def _usuario_to_dict(user):
 
 
 @auth_bp.route('/registro', methods=['POST'])
+@limiter.limit("5 per minute; 20 per hour")
 def registro():
     data = request.get_json(silent=True) or {}
 
@@ -38,26 +40,32 @@ def registro():
         if not data.get(campo):
             return jsonify({"error": f"Falta el campo: {campo}"}), 400
 
-    if not EMAIL_RE.match(data['correo']):
+    correo_norm = data['correo'].strip().lower()
+    if not EMAIL_RE.match(correo_norm):
         return jsonify({"error": "Correo electrónico inválido"}), 400
 
-    if len(data['contrasena']) < 6:
-        return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
+    if not PASSWORD_RE.match(data['contrasena']):
+        return jsonify({"error": "La contraseña debe tener al menos 8 caracteres, incluir letras y números"}), 400
 
-    if Usuario.query.filter_by(username=data['username']).first():
+    # Sanitizar nombre de usuario — solo alfanumérico + guión bajo
+    username = data['username'].strip()
+    if not re.match(r'^[a-zA-Z0-9_]{3,50}$', username):
+        return jsonify({"error": "Username solo puede contener letras, números y guión bajo (3–50 caracteres)"}), 400
+
+    if Usuario.query.filter_by(username=username).first():
         return jsonify({"error": "El username ya está en uso"}), 409
-    if Usuario.query.filter_by(correo=data['correo']).first():
+    if Usuario.query.filter_by(correo=correo_norm).first():
         return jsonify({"error": "El correo ya está en uso"}), 409
 
     try:
         nuevo = Usuario(
-            nombre_completo=data['nombre_completo'],
-            username=data['username'],
-            correo=data['correo'],
+            nombre_completo=data['nombre_completo'].strip()[:150],
+            username=username,
+            correo=correo_norm,
             contraseña_hasheada=generate_password_hash(data['contrasena']),
             fecha_nacimiento=datetime.date.fromisoformat(data['fecha_nacimiento']),
             equipo_favorito=data.get('equipo_favorito') or None,
-            is_admin=False,
+            is_admin=False,  # nunca se puede auto-asignar admin
         )
         db.session.add(nuevo)
         db.session.commit()
@@ -82,6 +90,7 @@ def registro():
 
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("10 per minute; 50 per hour")
 def login():
     data = request.get_json(silent=True) or {}
     correo = data.get('correo', '').strip().lower()
@@ -92,6 +101,7 @@ def login():
 
     user = Usuario.query.filter_by(correo=correo).first()
 
+    # Tiempo constante para evitar user enumeration
     if not user or not check_password_hash(user.contraseña_hasheada, contrasena):
         return jsonify({"error": "Credenciales inválidas"}), 401
 

@@ -13,10 +13,12 @@ from ..models import (
     Quiniela, Partido, UsuarioQuiniela, Prediccion,
     Usuario, Pago, Liga, Equipo
 )
-from ..extensions import db
+from ..extensions import db, limiter
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB máx
+ALLOWED_TYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
 
 
 def _save_imagen(data_url: str) -> str:
@@ -25,6 +27,14 @@ def _save_imagen(data_url: str) -> str:
         return data_url  # Ya es una ruta, devuélvela tal cual
     try:
         header, encoded = data_url.split(',', 1)
+        # Validar tipo de imagen
+        mime = header.split(';')[0].replace('data:', '')
+        if mime not in ALLOWED_TYPES:
+            raise ValueError(f"Tipo de imagen no permitido: {mime}")
+        raw = base64.b64decode(encoded)
+        # Validar tamaño
+        if len(raw) > MAX_IMAGE_BYTES:
+            raise ValueError("La imagen supera el límite de 5 MB")
         ext = 'jpg'
         if 'png' in header:
             ext = 'png'
@@ -35,7 +45,7 @@ def _save_imagen(data_url: str) -> str:
         filename = f"{uuid.uuid4().hex}.{ext}"
         filepath = os.path.join(UPLOAD_DIR, filename)
         with open(filepath, 'wb') as f:
-            f.write(base64.b64decode(encoded))
+            f.write(raw)
         return f"/uploads/{filename}"
     except Exception:
         return data_url  # Si falla, guarda lo que tenga

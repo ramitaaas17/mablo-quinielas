@@ -2,7 +2,7 @@ import os
 from datetime import timedelta
 from flask import Flask, send_from_directory
 from dotenv import load_dotenv
-from .extensions import db, jwt, cors
+from .extensions import db, jwt, cors, limiter
 
 
 def create_app():
@@ -28,9 +28,18 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     jwt.init_app(app)
+    limiter.init_app(app)
     raw_origins = os.environ.get("CORS_ORIGINS", "*")
     origins = [o.strip() for o in raw_origins.split(",")] if raw_origins != "*" else "*"
     cors.init_app(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
+
+    # Security headers on every response
+    @app.after_request
+    def set_security_headers(resp):
+        resp.headers['X-Content-Type-Options'] = 'nosniff'
+        resp.headers['X-Frame-Options'] = 'DENY'
+        resp.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return resp
 
     # Register blueprints
     from .routes.auth import auth_bp
