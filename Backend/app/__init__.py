@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from flask import Flask
+from flask import Flask, send_from_directory
 from dotenv import load_dotenv
 from .extensions import db, jwt, cors
 
@@ -46,6 +46,16 @@ def create_app():
     @app.route('/', methods=['GET'])
     def alive():
         return {"status": "ok", "version": "1.0.0"}, 200
+
+    # Servir imágenes subidas con caché de 1 año
+    UPLOAD_DIR = os.path.join(os.path.dirname(__file__), '..', 'uploads')
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    @app.route('/uploads/<path:filename>', methods=['GET'])
+    def serve_upload(filename):
+        resp = send_from_directory(UPLOAD_DIR, filename)
+        resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        return resp
 
     # Scheduler de marcadores en vivo
     # Solo en proceso principal (evita doble inicio con debug reloader)

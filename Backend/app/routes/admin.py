@@ -1,8 +1,11 @@
 import csv
 import io
+import os
+import uuid
+import base64
 import datetime
 from functools import wraps
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, send_from_directory
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
@@ -11,6 +14,31 @@ from ..models import (
     Usuario, Pago, Liga, Equipo
 )
 from ..extensions import db
+
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'uploads')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def _save_imagen(data_url: str) -> str:
+    """Recibe un data-URL Base64, guarda el archivo en disco y devuelve la URL relativa."""
+    if not data_url or not data_url.startswith('data:'):
+        return data_url  # Ya es una ruta, devuélvela tal cual
+    try:
+        header, encoded = data_url.split(',', 1)
+        ext = 'jpg'
+        if 'png' in header:
+            ext = 'png'
+        elif 'webp' in header:
+            ext = 'webp'
+        elif 'gif' in header:
+            ext = 'gif'
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        with open(filepath, 'wb') as f:
+            f.write(base64.b64decode(encoded))
+        return f"/uploads/{filename}"
+    except Exception:
+        return data_url  # Si falla, guarda lo que tenga
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -212,7 +240,7 @@ def crear_quiniela():
             precio_entrada=float(data['precio_entrada']),
             comision=float(data['comision']),
             estado='abierta',
-            imagen_fondo=data.get('imagen_fondo'),
+            imagen_fondo=_save_imagen(data.get('imagen_fondo')),
         )
         db.session.add(q)
         db.session.commit()
@@ -257,7 +285,7 @@ def editar_quiniela(id_quiniela):
     if 'comision' in data:
         q.comision = float(data['comision'])
     if 'imagen_fondo' in data:
-        q.imagen_fondo = data['imagen_fondo']
+        q.imagen_fondo = _save_imagen(data['imagen_fondo'])
 
     db.session.commit()
     return jsonify({"mensaje": "Quiniela actualizada"}), 200

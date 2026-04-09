@@ -8,4 +8,13 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
+  server: {
+    proxy: {
+      '/auth': 'http://127.0.0.1:8000',
+      '/quinielas': 'http://127.0.0.1:8000',
+      '/admin': 'http://127.0.0.1:8000',
+      '/predicciones': 'http://127.0.0.1:8000',
+      '/uploads': 'http://127.0.0.1:8000'
+    }
+  }
 })
