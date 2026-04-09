@@ -1,0 +1,12 @@
+[project]
+name = "bot-de-scraping"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.1.0",
+    "requests>=2.31.0",
+    "rich>=13.7.0",
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "local": "America",
+    "visitante": "Chivas",
+    "fecha": "Sab 18:00"
+  },
+  {
+    "id": 2,
+    "local": "Cruz Azul",
+    "visitante": "Pumas",
+    "fecha": "Sab 20:00"
+  },
+  {
+    "id": 3,
+    "local": "Monterrey",
+    "visitante": "Tigres",
+    "fecha": "Dom 12:00"
+  },
+  {
+    "id": 4,
+    "local": "Toluca",
+    "visitante": "Santos",
+    "fecha": "Dom 14:00"
+  },
+  {
+    "id": 5,
+    "local": "Atlas",
+    "visitante": "Guadalajara",
+    "fecha": "Dom 17:00"
+  },
+  {
+    "id": 6,
+    "local": "Leon",
+    "visitante": "Necaxa",
+    "fecha": "Dom 19:00"
+  },
+  {
+    "id": 7,
+    "local": "Queretaro",
+    "visitante": "Mazatlan",
+    "fecha": "Dom 21:00"
+  },
+  {
+    "id": 8,
+    "local": "Puebla",
+    "visitante": "Pachuca",
+    "fecha": "Dom 21:00"
+  },
+  {
+    "id": 9,
+    "local": "Atletico",
+    "visitante": "Juarez",
+    "fecha": "Dom 21:00"
+  }
+]

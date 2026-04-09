@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Invitación — Quiniela</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:      #1a1a1a;
+      --white:      #ffffff;
+      --cream:      #fafaf8;
+      --border:     #e4e4e0;
+      --grey:       #6b6b6b;
+      --grey-light: #f2f2ef;
+      --green:      #3dbb78;
+      --green-dark: #25854f;
+      --green-pale: #d6f5e8;
+      --orange:     #f4a030;
+      --orange-pale:#fff3e0;
+      --pink:       #f8c0ce;
+      --font:       'Nunito', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #e8e8e4;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    /* ── PAGE WRAPPER ──────────────────────────────── */
+    .page {
+      width: 1280px;
+      min-height: 820px;
+      background: var(--cream);
+      border-radius: 16px;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.10);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── GRADIENT BLOB ─────────────────────────────── */
+    .blob {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1400px;
+      height: 420px;
+      border-radius: 0 0 455px 455px;
+      background: linear-gradient(145deg, #fce4ec 0%, #fde8d8 40%, #d6f5e8 100%);
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    /* ── DECORATIVE DOTS ───────────────────────────── */
+    .dots { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .dot {
+      position: absolute;
+      border-radius: 50%;
+    }
+    .dot-1  { width:16px; height:16px; background:#f4a030; top:28%;  left:13.44%; }
+    .dot-2  { width:12px; height:12px; background:#b0d4ff; top:21%;  right:13.59%; }
+    .dot-3  { width:10px; height:10px; background:#d6f5e8; top:48%;  left:21.48%; }
+    .dot-4  { width:18px; height:18px; background:#fce4d6; top:37%;  right:21.17%; }
+    .dot-5  { width:8px;  height:8px;  background:#ffe08a; top:11%;  left:49.69%; }
+    .dot-6  { width:22px; height:22px; background:#e2cfff; top:20%;  left:16.33%; }
+    .dot-7  { width:18px; height:18px; background:#b0d4ff; top:30%;  right:18.05%; }
+
+    /* ── NAVBAR ────────────────────────────────────── */
+    nav {
+      position: relative;
+      z-index: 10;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      padding: 0 40px;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 24px; height: 24px;
+      background: var(--black);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo-icon svg { display: block; }
+    .nav-logo span {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--black);
+      letter-spacing: -0.3px;
+    }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--grey);
+      text-decoration: none;
+    }
+    .btn-nav {
+      background: var(--black);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 22px;
+      height: 36px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    /* ── MAIN CONTENT ──────────────────────────────── */
+    .main {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 40px 60px;
+    }
+
+    /* ── INVITE BADGE ──────────────────────────────── */
+    .invite-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-pale);
+      border: 1px solid rgba(61,187,120,0.3);
+      border-radius: 40px;
+      padding: 6px 16px;
+      margin-top: 36px;
+      margin-bottom: 20px;
+    }
+    .invite-badge-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.3); }
+    }
+    .invite-badge span {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--green-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    /* ── HEADING ───────────────────────────────────── */
+    .heading-area {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .admin-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--grey);
+      margin-bottom: 8px;
+    }
+    .admin-name strong { color: var(--black); font-weight: 900; }
+    h1 {
+      font-size: 42px;
+      font-weight: 900;
+      color: var(--black);
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    h1 em { font-style: normal; color: var(--green-dark); }
+    .subtitle {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--grey);
+    }
+
+    /* ── CARD ──────────────────────────────────────── */
+    .card {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+      backdrop-filter: blur(12px);
+      width: 480px;
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── QUINIELA INFO BLOCK ───────────────────────── */
+    .quiniela-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .quiniela-icon {
+      width: 52px; height: 52px;
+      background: var(--black);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .quiniela-icon svg { display: block; }
+    .quiniela-meta { flex: 1; }
+    .quiniela-meta h2 {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--black);
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .quiniela-meta .league {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey);
+      margin-top: 3px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-pale);
+      color: var(--green-dark);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 40px;
+      margin-top: 6px;
+    }
+    .status-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+    }
+
+    /* ── STATS GRID ────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .stat-box {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .stat-box.dark {
+      background: var(--black);
+      border-color: var(--black);
+    }
+    .stat-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--grey);
+    }
+    .stat-box.dark .stat-label { color: rgba(255,255,255,0.5); }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--black);
+      letter-spacing: -0.8px;
+      line-height: 1;
+    }
+    .stat-box.dark .stat-value { color: var(--white); }
+    .stat-sub {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--grey);
+    }
+    .stat-box.dark .stat-sub { color: rgba(255,255,255,0.4); }
+
+    /* ── DIVIDER ───────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 -4px;
+    }
+
+    /* ── PAYMENT INFO ──────────────────────────────── */
+    .payment-info {
+      background: var(--orange-pale);
+      border: 1px solid rgba(244,160,48,0.25);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .payment-icon {
+      width: 36px; height: 36px;
+      background: var(--orange);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .payment-info p {
+      font-size: 12px;
+      font-weight: 600;
+      color: #7a4a00;
+      line-height: 1.5;
+    }
+    .payment-info strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #5a3000;
+      margin-bottom: 2px;
+    }
+
+    /* ── CTA BUTTON ────────────────────────────────── */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--black);
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 800;
+      height: 54px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      width: 100%;
+      letter-spacing: -0.2px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #333; }
+    .btn-primary svg { flex-shrink: 0; }
+
+    /* ── SECONDARY LINK ────────────────────────────── */
+    .already-account {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey);
+    }
+    .already-account a {
+      color: var(--green-dark);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    /* ── STATE: LOGGED IN, PENDING ─────────────────── */
+    .state-pending {
+      display: none; /* toggle via JS in real app */
+      flex-direction: column;
+      gap: 24px;
+    }
+    .pending-banner {
+      background: var(--orange-pale);
+      border: 1px solid rgba(244,160,48,0.3);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .pending-icon {
+      width: 48px; height: 48px;
+      background: var(--orange);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pending-banner h3 {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--black);
+    }
+    .pending-banner p {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--grey);
+      line-height: 1.5;
+    }
+
+    /* ── PARTICIPANTS PREVIEW ──────────────────────── */
+    .participants {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .avatar-stack { display: flex; }
+    .avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      margin-left: -6px;
+    }
+    .avatar:first-child { margin-left: 0; }
+    .avatar-a { background: #d6f5e8; color: #25854f; }
+    .avatar-b { background: #fde8d8; color: #a05a00; }
+    .avatar-c { background: #fce8e8; color: #7c3aed; }
+    .avatar-d { background: #f2f2ef; color: #6b6b6b; }
+    .participants-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--grey);
+    }
+    .participants-text strong { color: var(--black); }
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .page-footer {
+      position: relative;
+      z-index: 5;
+      padding: 20px 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .footer-brand span {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--black);
+    }
+    .footer-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey);
+    }
+    .footer-logo {
+      width: 20px; height: 20px;
+      background: var(--black);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── COPY LINK ROW ─────────────────────────────── */
+    .copy-link-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--grey-light);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .copy-link-text {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grey);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn-copy {
+      background: var(--black);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================
+       ESTADO 1: USUARIO NO LOGGEADO (estado por defecto)
+       ====================================================== -->
+  <div class="page" id="state-default">
+
+    <!-- Decorative background -->
+    <div class="blob"></div>
+    <div class="dots">
+      <div class="dot dot-1"></div>
+      <div class="dot dot-2"></div>
+      <div class="dot dot-3"></div>
+      <div class="dot dot-4"></div>
+      <div class="dot dot-5"></div>
+      <div class="dot dot-6"></div>
+      <div class="dot dot-7"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav>
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="5" fill="white"/>
+            <circle cx="7" cy="7" r="2" fill="#1a1a1a"/>
+          </svg>
+        </div>
+        <span>Quiniela</span>
+      </a>
+      <div class="nav-links">
+        <a href="#">Inicio</a>
+        <a href="#">Precios</a>
+        <a href="#">Ayuda</a>
+      </div>
+      <button class="btn-nav">Registrate</button>
+    </nav>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <!-- Invite badge -->
+      <div class="invite-badge">
+        <div class="invite-badge-dot"></div>
+        <span>Tienes una invitación</span>
+      </div>
+
+      <!-- Heading -->
+      <div class="heading-area">
+        <p class="admin-name"><strong>Carlos Ruiz</strong> te invita a jugar</p>
+        <h1>Únete a la<br/><em>Jornada 12</em></h1>
+        <p class="subtitle">Predice, compite y gana el pozo del grupo.</p>
+      </div>
+
+      <!-- Card -->
+      <div class="card">
+
+        <!-- Quiniela header -->
+        <div class="quiniela-header">
+          <div class="quiniela-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="3" stroke="white" stroke-width="1.5"/>
+              <path d="M3 9h18M9 9v12" stroke="white" stroke-width="1.5"/>
+              <circle cx="6" cy="6" r="1" fill="white"/>
+            </svg>
+          </div>
+          <div class="quiniela-meta">
+            <h2>Jornada 12 — Liga MX</h2>
+            <div class="league">Liga MX · México</div>
+            <div class="status-badge">Abierta</div>
+          </div>
+          <!-- Participants preview -->
+          <div class="participants">
+            <div class="avatar-stack">
+              <div class="avatar avatar-a">CR</div>
+              <div class="avatar avatar-b">JL</div>
+              <div class="avatar avatar-c">MA</div>
+              <div class="avatar avatar-d">+9</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-box dark">
+            <div class="stat-label">Pozo estimado</div>
+            <div class="stat-value">$1,200</div>
+            <div class="stat-sub">12 jugadores</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Entrada</div>
+            <div class="stat-value">$100</div>
+            <div class="stat-sub">por jugador</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Cierre</div>
+            <div class="stat-value" style="font-size:16px; letter-spacing:-0.3px; margin-top:3px">Vie 10am</div>
+            <div class="stat-sub">18 Abr 2026</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Payment info -->
+        <div class="payment-info">
+          <div class="payment-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="7" stroke="white" stroke-width="1.5"/>
+              <path d="M9 5.5v7M6.5 7.5h4a2 2 0 0 1 0 4H6.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <strong>¿Cómo pagar?</strong>
+            <p>Paga <strong style="display:inline; font-size:inherit; color:inherit">$100</strong> directamente a <strong style="display:inline; font-size:inherit; color:#5a3000">Carlos Ruiz</strong> antes del viernes 18 de abril. El organizador confirmará tu pago y podrás hacer predicciones.</p>
+          </div>
+        </div>
+
+        <!-- Partidos info row -->
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="display:flex; align-items:center; gap:6px; background:var(--grey-light); border:1px solid var(--border); border-radius:10px; padding:8px 12px; flex:1;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="12" height="12" rx="2" stroke="#6b6b6b" stroke-width="1.2"/>
+              <path d="M1 5h12M5 5v8" stroke="#6b6b6b" stroke-width="1.2"/>
+            </svg>
+            <span style="font-size:11px; font-weight:700; color:var(--grey)">9 partidos</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--grey-light); border:1px solid var(--border); border-radius:10px; padding:8px 12px; flex:1;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="5" r="3" stroke="#6b6b6b" stroke-width="1.2"/>
+              <path d="M2 13c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="#6b6b6b" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <span style="font-size:11px; font-weight:700; color:var(--grey)">12 participantes</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--grey-light); border:1px solid var(--border); border-radius:10px; padding:8px 12px; flex:1;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 2h8v5a4 4 0 0 1-8 0V2z" stroke="#6b6b6b" stroke-width="1.2"/>
+              <path d="M7 9v3M5 12h4" stroke="#6b6b6b" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <span style="font-size:11px; font-weight:700; color:var(--grey)">1 comodín</span>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 1v10M5 8l4 4 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M1 13v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Quiero unirme
+        </button>
+
+        <!-- Already have account -->
+        <p class="already-account">
+          ¿Ya tienes cuenta? <a href="#">Inicia sesión para unirte</a>
+        </p>
+
+      </div><!-- /card -->
+
+    </main><!-- /main -->
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="4" fill="white"/>
+            <circle cx="6" cy="6" r="1.5" fill="#1a1a1a"/>
+          </svg>
+        </div>
+        <span>Quiniela</span>
+      </div>
+      <p class="footer-text">El dinero se gestiona directamente entre participantes y organizador.</p>
+    </footer>
+
+  </div><!-- /page state-default -->
+
+
+  <!-- ======================================================
+       ESTADO 2: USUARIO LOGGEADO — INSCRIPCIÓN PENDIENTE
+       Ancho independiente para mostrar como pantalla aparte
+       ====================================================== -->
+  <div class="page" id="state-pending" style="margin-top: 60px;">
+
+    <div class="blob"></div>
+    <div class="dots">
+      <div class="dot dot-1"></div>
+      <div class="dot dot-2"></div>
+      <div class="dot dot-3"></div>
+      <div class="dot dot-4"></div>
+      <div class="dot dot-5"></div>
+      <div class="dot dot-6"></div>
+      <div class="dot dot-7"></div>
+    </div>
+
+    <nav>
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="5" fill="white"/>
+            <circle cx="7" cy="7" r="2" fill="#1a1a1a"/>
+          </svg>
+        </div>
+        <span>Quiniela</span>
+      </a>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:11px; font-weight:700; color:var(--grey); border:1px solid var(--border); border-radius:40px; padding:4px 12px;">Jornada 12</span>
+        <div style="width:34px; height:34px; border-radius:50%; background:var(--green-pale); border:2px solid var(--green); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--green-dark);">CR</div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div style="height: 24px;"></div>
+
+      <div class="heading-area">
+        <p class="admin-name"><strong>Carlos Ruiz</strong> te invita a jugar</p>
+        <h1>Jornada 12 — <em>Liga MX</em></h1>
+        <p class="subtitle">Tu inscripción está registrada. Solo falta confirmar el pago.</p>
+      </div>
+
+      <div class="card">
+
+        <!-- Pending banner -->
+        <div style="background:var(--orange-pale); border:1px solid rgba(244,160,48,0.3); border-radius:16px; padding:22px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+          <div style="width:48px; height:48px; background:var(--orange); border-radius:14px; display:flex; align-items:center; justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="9" stroke="white" stroke-width="1.5"/>
+              <path d="M11 6.5v5.5M11 14.5v1" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="font-size:16px; font-weight:900; color:var(--black);">Inscripción pendiente de pago</h3>
+            <p style="font-size:13px; font-weight:600; color:#7a4a00; margin-top:4px; line-height:1.5;">Cuando realices tu pago, <strong style="color:#5a3000;">Carlos Ruiz</strong> confirmará tu acceso y podrás hacer tus predicciones.</p>
+          </div>
+        </div>
+
+        <!-- Quiniela info (compact) -->
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:var(--cream); border:1px solid var(--border); border-radius:12px;">
+            <span style="font-size:12px; font-weight:700; color:var(--grey); text-transform:uppercase; letter-spacing:0.4px;">Quiniela</span>
+            <span style="font-size:13px; font-weight:800; color:var(--black);">Jornada 12 — Liga MX</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:var(--cream); border:1px solid var(--border); border-radius:12px;">
+            <span style="font-size:12px; font-weight:700; color:var(--grey); text-transform:uppercase; letter-spacing:0.4px;">Monto a pagar</span>
+            <span style="font-size:18px; font-weight:900; color:var(--black); letter-spacing:-0.5px;">$100</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:var(--cream); border:1px solid var(--border); border-radius:12px;">
+            <span style="font-size:12px; font-weight:700; color:var(--grey); text-transform:uppercase; letter-spacing:0.4px;">Pagar antes de</span>
+            <span style="font-size:13px; font-weight:800; color:var(--orange);">Vie 18 Abr · 10:00 am</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:var(--cream); border:1px solid var(--border); border-radius:12px;">
+            <span style="font-size:12px; font-weight:700; color:var(--grey); text-transform:uppercase; letter-spacing:0.4px;">Pagar a</span>
+            <span style="font-size:13px; font-weight:800; color:var(--black);">Carlos Ruiz</span>
+          </div>
+        </div>
+
+        <!-- Copy link row (for sharing confirmation) -->
+        <div class="divider"></div>
+        <div>
+          <p style="font-size:12px; font-weight:700; color:var(--grey); margin-bottom:8px;">Link de la quiniela para compartir con otros</p>
+          <div class="copy-link-row">
+            <span class="copy-link-text">quiniela.app/unirse/LIGA12-J12</span>
+            <button class="btn-copy">Copiar</button>
+          </div>
+        </div>
+
+        <!-- Back to dashboard -->
+        <button class="btn-primary" style="background: var(--grey-light); color: var(--black);">
+          Ver mi dashboard
+        </button>
+
+      </div>
+
+    </main>
+
+    <footer class="page-footer">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="4" fill="white"/>
+            <circle cx="6" cy="6" r="1.5" fill="#1a1a1a"/>
+          </svg>
+        </div>
+        <span>Quiniela</span>
+      </div>
+      <p class="footer-text">El dinero se gestiona directamente entre participantes y organizador.</p>
+    </footer>
+
+  </div><!-- /state-pending -->
+
+</body>
+</html>
