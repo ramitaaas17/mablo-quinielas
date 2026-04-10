@@ -265,7 +265,7 @@ export default function AdminPagos({ onNavigate }) {
       {/* MODAL: Confirmar pago */}
       {confirmTarget && (
         <Modal onClose={() => setConfirmTarget(null)}>
-          <div className="w-[380px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[380px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <div className="w-[42px] h-[42px] bg-[#d6f5e8] rounded-[10px] flex items-center justify-center mb-5">
               <IconCheck size={20} color="#25854f" />
             </div>
@@ -325,7 +325,7 @@ export default function AdminPagos({ onNavigate }) {
       {/* MODAL: Revertir pago */}
       {revertTarget && (
         <Modal onClose={() => setRevertTarget(null)}>
-          <div className="w-[360px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[360px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <div className="w-[42px] h-[42px] bg-[#fff3e0] rounded-[10px] flex items-center justify-center mb-5">
               <IconWarning size={20} color="#f4a030" />
             </div>

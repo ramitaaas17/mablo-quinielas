@@ -9,6 +9,7 @@ export default defineConfig({
     react(),
   ],
   server: {
+    host: true,
     proxy: {
       '/auth': 'http://127.0.0.1:8000',
       '/quinielas': 'http://127.0.0.1:8000',

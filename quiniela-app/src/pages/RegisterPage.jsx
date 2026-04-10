@@ -70,26 +70,30 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[#fafaf8] flex flex-col relative overflow-hidden">
       <Navbar variant="landing" />
 
-      {/* Background Gradient Blob */}
-      <div
-        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[200%] md:w-[1400px] h-[400px] md:h-[500px] rounded-b-[50%] opacity-55 pointer-events-none"
-        style={{ backgroundImage: "linear-gradient(145deg, rgb(252,228,236) 0%, rgb(253,232,216) 40%, rgb(214,245,232) 100%)" }}
-      />
+      {/* Background Gradient Blob — wrapper centers it, inner animates */}
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 pointer-events-none">
+        <div
+          className="w-[200vw] md:w-[1400px] h-[400px] md:h-[500px] rounded-b-[50%] animate-breathe"
+          style={{ backgroundImage: "linear-gradient(145deg, rgb(252,228,236) 0%, rgb(253,232,216) 40%, rgb(214,245,232) 100%)", opacity: 0.55 }}
+        />
+      </div>
 
       {/* Main Container */}
       <div className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-center lg:justify-between px-6 lg:pl-10 lg:pr-16 xl:pl-20 w-full max-w-[1440px] mx-auto py-8 lg:gap-14">
 
         {/* Left Image */}
-        <div className="hidden lg:flex w-[55%] xl:w-[60%] justify-center xl:justify-start items-center h-full relative">
+        <div className="hidden lg:flex w-[55%] xl:w-[60%] justify-center xl:justify-start items-center h-full relative animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <img
             src={REGISTER_BG}
             alt="Perro anotando gol"
+            fetchpriority="high"
+            decoding="async"
             className="w-full max-w-[800px] object-contain drop-shadow-lg"
           />
         </div>
 
         {/* Right Form Card */}
-        <div className="w-full max-w-[480px] lg:w-[45%] xl:w-[40%] flex justify-center lg:justify-end">
+        <div className="w-full max-w-[480px] lg:w-[45%] xl:w-[40%] flex justify-center lg:justify-end animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
           <form
             onSubmit={handleSubmit}
             className="w-full bg-[#f2f2ef] rounded-[32px] p-8 md:p-10 flex flex-col gap-4 shadow-sm"

@@ -46,14 +46,17 @@ export default function PerfilPage() {
       <Navbar variant="app" showWeek />
 
       {/* Profile header */}
-      <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden">
+      <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden animate-fade-in">
         <div
-          className="absolute -top-30 -left-10 md:-left-30 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full opacity-40 pointer-events-none"
+          className="absolute -top-30 -left-10 md:-left-30 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full opacity-40 pointer-events-none animate-breathe"
           style={{ backgroundImage: "linear-gradient(145deg, rgb(252,228,236) 0%, rgb(214,245,232) 100%)" }}
         />
         <div className="relative z-10 px-6 sm:px-10 lg:px-[90px] py-8 flex flex-col md:flex-row items-start md:items-center gap-6">
-          {/* Avatar */}
-          <div className="w-[80px] h-[80px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[28px] font-extrabold text-[#25854f] flex-shrink-0" style={{ fontFamily: font }}>
+          {/* Avatar with glow pulse */}
+          <div
+            className="w-[80px] h-[80px] rounded-full bg-[#d6f5e8] border-[3px] border-[#3dbb78] flex items-center justify-center text-[28px] font-extrabold text-[#25854f] flex-shrink-0 animate-scale-in animate-glow-pulse transition-transform hover:scale-105"
+            style={{ fontFamily: font }}
+          >
             {iniciales || "U"}
           </div>
           <div className="flex-1">

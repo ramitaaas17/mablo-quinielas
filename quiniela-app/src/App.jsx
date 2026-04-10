@@ -1,14 +1,23 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./pages/LoginPage.jsx";
-import RegisterPage from "./pages/RegisterPage.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx";
-import TablaPage from "./pages/TablaPage.jsx";
-import MisQuinielasPage from "./pages/MisQuinielasPage.jsx";
-import PerfilPage from "./pages/PerfilPage.jsx";
-import EmptyStatePage from "./pages/EmptyStatePage.jsx";
-import AdminApp from "./pages/admin/AdminApp.jsx";
-import InvitacionPage from "./pages/InvitacionPage.jsx";
 import { useStore } from "./store";
+
+// Lazy loading — cada página es un chunk separado.
+// El navegador solo descarga el JS de la página que visitas.
+const LoginPage       = lazy(() => import("./pages/LoginPage.jsx"));
+const RegisterPage    = lazy(() => import("./pages/RegisterPage.jsx"));
+const DashboardPage   = lazy(() => import("./pages/DashboardPage.jsx"));
+const TablaPage       = lazy(() => import("./pages/TablaPage.jsx"));
+const MisQuinielasPage = lazy(() => import("./pages/MisQuinielasPage.jsx"));
+const PerfilPage      = lazy(() => import("./pages/PerfilPage.jsx"));
+const EmptyStatePage  = lazy(() => import("./pages/EmptyStatePage.jsx"));
+const AdminApp        = lazy(() => import("./pages/admin/AdminApp.jsx"));
+const InvitacionPage  = lazy(() => import("./pages/InvitacionPage.jsx"));
+
+// Fallback mínimo — sin flash raro, solo fondo del color de la app
+function PageLoader() {
+  return <div className="min-h-screen bg-[#fafaf8]" />;
+}
 
 function ProtectedRoute({ children }) {
   const { user } = useStore();
@@ -19,7 +28,7 @@ function ProtectedRoute({ children }) {
 function AdminRoute({ children }) {
   const { user } = useStore();
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.isAdmin) return <Navigate to="/" replace />; // Only admin can access
+  if (!user.isAdmin) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -28,65 +37,22 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <LoginPage />} />
-        <Route path="/register" element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <RegisterPage />} />
-        
-        {/* Protected routes */}
-        <Route 
-          path="/" 
-          element={
-             <ProtectedRoute>
-               <DashboardPage />
-             </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/tabla" 
-          element={
-             <ProtectedRoute>
-               <TablaPage />
-             </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/mis-quinielas" 
-          element={
-             <ProtectedRoute>
-               <MisQuinielasPage />
-             </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/perfil" 
-          element={
-             <ProtectedRoute>
-               <PerfilPage />
-             </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/empty" 
-          element={
-             <ProtectedRoute>
-               <EmptyStatePage />
-             </ProtectedRoute>
-          } 
-        />
-        
-        {/* Ruta pública de invitación — no requiere autenticación */}
-        <Route path="/unirse/:codigo" element={<InvitacionPage />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/login"    element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <LoginPage />} />
+          <Route path="/register" element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <RegisterPage />} />
 
-        {/* Admin routes */}
-        <Route 
-          path="/admin/*" 
-          element={
-             <AdminRoute>
-               <AdminApp />
-             </AdminRoute>
-          } 
-        />
-      </Routes>
+          <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/tabla" element={<ProtectedRoute><TablaPage /></ProtectedRoute>} />
+          <Route path="/mis-quinielas" element={<ProtectedRoute><MisQuinielasPage /></ProtectedRoute>} />
+          <Route path="/perfil" element={<ProtectedRoute><PerfilPage /></ProtectedRoute>} />
+          <Route path="/empty" element={<ProtectedRoute><EmptyStatePage /></ProtectedRoute>} />
+
+          <Route path="/unirse/:codigo" element={<InvitacionPage />} />
+
+          <Route path="/admin/*" element={<AdminRoute><AdminApp /></AdminRoute>} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

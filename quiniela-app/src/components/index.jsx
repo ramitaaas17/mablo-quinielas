@@ -1,11 +1,12 @@
-import EstadioLogin from "../assets/mabloImages/EstadioLogin.png";
-import golLogin from "../assets/mabloImages/golLogin.png";
-import emptyMablo from "../assets/mabloImages/emptyMablo.png";
-import mabloTablaPosiciones from "../assets/mabloImages/mabloTablaPosiciones.png";
-import vestidoresDashboard from "../assets/mabloImages/vestidoresDashboard.png";
+import EstadioLogin from "../assets/mabloImages/EstadioLogin.webp";
+import golLogin from "../assets/mabloImages/golLogin.webp";
+import emptyMablo from "../assets/mabloImages/emptyMablo.webp";
+import mabloTablaPosiciones from "../assets/mabloImages/mabloTablaPosiciones.webp";
+import vestidoresDashboard from "../assets/mabloImages/vestidoresDashboard.webp";
 
 export * from "./Navbar";
 export * from "./Cards";
+export { CardSkeleton } from "./Cards";
 export * from "./Forms";
 export { InputField, PrimaryButton } from "./Forms";
 

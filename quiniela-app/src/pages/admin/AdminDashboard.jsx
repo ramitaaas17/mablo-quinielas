@@ -51,31 +51,46 @@ export default function AdminDashboard({ onNavigate }) {
     <AdminLayout active="dashboard" onNavigate={onNavigate}>
       <TopBar title="Dashboard" badge={quinielas.length > 0 ? quinielas[0]?.nombre : "—"} />
 
-      {/* Hero banner */}
-      <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-7 pt-7 pb-7 flex-shrink-0">
-        <div
-          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1400px] h-[260px] rounded-b-[415px] opacity-45 pointer-events-none"
-          style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }}
-        />
-        <div className="relative z-10">
-          <h1 className="text-[22px] font-black text-[#1a1a1a] tracking-[-0.6px]" style={{ fontFamily: font }}>
-            Panel de administración
-          </h1>
-          <p className="text-[12px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>
-            {loading ? "Cargando datos..." : `${s.quinielas_activas || 0} quinielas activas · ${s.total_usuarios || 0} participantes`}
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-4">
-            <AdminStatCard label="Pozo total activo"  value={`$${(s.pozo_total || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`} sub="acumulado" dark />
-            <AdminStatCard label="Participantes"      value={String(s.total_usuarios || 0)} sub="registrados" />
-            <AdminStatCard label="Pagos confirmados"  value={String(s.pagos_confirmados || 0)} sub="esta semana" />
-            <AdminStatCard label="Pagos pendientes"   value={String(s.pagos_pendientes || 0)} sub="sin confirmar" accent="#f4a030" />
-            <AdminStatCard label="Quinielas activas"  value={String(s.quinielas_activas || 0)} sub="abiertas" />
+      {/* Content + Hero banner juntos en el scroll */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Hero banner */}
+        <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-4 md:px-7 pt-6 pb-6 animate-fade-in">
+          {/* Blob — wrapper centers, inner breathes */}
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div
+              className="w-[1400px] h-[260px] rounded-b-[415px] opacity-45 animate-breathe"
+              style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }}
+            />
+          </div>
+          <div className="relative z-10">
+            <h1 className="text-[22px] font-black text-[#1a1a1a] tracking-[-0.6px] animate-fade-in-up" style={{ fontFamily: font }}>
+              Panel de administración
+            </h1>
+            <p className="text-[12px] font-semibold text-[#6b6b6b] mt-0.5 animate-fade-in" style={{ fontFamily: font, animationDelay: "0.1s" }}>
+              {loading ? "Cargando datos..." : `${s.quinielas_activas || 0} quinielas activas · ${s.total_usuarios || 0} participantes`}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-4">
+              {[
+                { label: "Pozo total activo",  value: `$${(s.pozo_total || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`, sub: "acumulado",    dark: true },
+                { label: "Participantes",      value: String(s.total_usuarios || 0),    sub: "registrados" },
+                { label: "Pagos confirmados",  value: String(s.pagos_confirmados || 0), sub: "esta semana",  accent: "#3dbb78" },
+                { label: "Pagos pendientes",   value: String(s.pagos_pendientes || 0),  sub: "sin confirmar",accent: "#f4a030" },
+                { label: "Quinielas activas",  value: String(s.quinielas_activas || 0), sub: "abiertas" },
+              ].map((card, i) => (
+                <div
+                  key={card.label}
+                  className={card.label === "Quinielas activas" ? "col-span-2 sm:col-span-1 animate-fade-in-up" : "animate-fade-in-up"}
+                  style={{ animationDelay: `${0.08 + i * 0.06}s` }}
+                >
+                  <AdminStatCard {...card} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-7 py-5">
+        {/* Contenido principal */}
+        <div className="px-4 md:px-7 py-5">
         <div className="flex flex-col xl:grid xl:grid-cols-[1fr_252px] gap-[18px]">
           {/* Left column */}
           <div className="flex flex-col gap-[18px]">
@@ -91,7 +106,7 @@ export default function AdminDashboard({ onNavigate }) {
                 <p className="text-[13px] text-[#6b6b6b]" style={{ fontFamily: font }}>Sin quinielas activas.</p>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {quinielas.map((q, i) => {
+                {quinielas.map((q, i, arr) => {
                   const handleShareLink = async () => {
                     try {
                       const inv = await adminService.getCodigoInvitacion(q.id);
@@ -123,19 +138,20 @@ export default function AdminDashboard({ onNavigate }) {
                     }
                   };
                   return (
-                  <MiniQuinielaCard
-                    key={q.id}
-                    title={q.nombre}
-                    league={q.liga_nombre}
-                    status={q.estado}
-                    pozo={`$${(q.pozo_acumulado || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`}
-                    pagados={`${q.pagos_confirmados || 0}/${q.num_jugadores || 0}`}
-                    partidos={String(q.num_partidos || 0)}
-                    cierre={q.cierre ? new Date(q.cierre).toLocaleDateString('es-MX', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ""}
-                    accentColor={["green", "orange", "pink"][i % 3]}
-                    onVer={() => onNavigate && onNavigate("pagos")}
-                    onShare={handleShareLink}
-                  />
+                  <div key={q.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}>
+                    <MiniQuinielaCard
+                      title={q.nombre}
+                      league={q.liga_nombre}
+                      status={q.estado}
+                      pozo={`$${(q.pozo_acumulado || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`}
+                      pagados={`${q.pagos_confirmados || 0}/${q.num_jugadores || 0}`}
+                      partidos={String(q.num_partidos || 0)}
+                      cierre={q.cierre ? new Date(q.cierre).toLocaleDateString('es-MX', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ""}
+                      accentColor={["green", "orange", "pink"][i % 3]}
+                      onVer={() => onNavigate && onNavigate("pagos")}
+                      onShare={handleShareLink}
+                    />
+                  </div>
                 );
                 })}
               </div>
@@ -146,7 +162,8 @@ export default function AdminDashboard({ onNavigate }) {
               <div className="border-b border-[#e4e4e0] px-4 py-3">
                 <span className="text-[12px] font-extrabold text-[#1a1a1a]" style={{ fontFamily: font }}>Actividad reciente</span>
               </div>
-              <table className="w-full" style={{ fontFamily: font }}>
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px]" style={{ fontFamily: font }}>
                 <thead>
                   <tr className="border-b border-[#e4e4e0]">
                     {["Usuario", "Acción", "Quiniela", "Hora"].map(h => (
@@ -161,7 +178,11 @@ export default function AdminDashboard({ onNavigate }) {
                   {actividad.map((r, i) => {
                     const bs = actionBadgeStyle[r.tipo] || { bg: "#f2f2ef", text: "#6b6b6b" };
                     return (
-                      <tr key={i} className="border-b border-[#e4e4e0] last:border-b-0">
+                      <tr
+                        key={i}
+                        className="border-b border-[#e4e4e0] last:border-b-0 animate-fade-in transition-colors hover:bg-[#fafaf8]"
+                        style={{ animationDelay: `${i * 40 + 100}ms` }}
+                      >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] flex items-center justify-center text-[10px] font-extrabold flex-shrink-0"
@@ -182,6 +203,7 @@ export default function AdminDashboard({ onNavigate }) {
                   })}
                 </tbody>
               </table>
+              </div>{/* end overflow-x-auto */}
             </div>
           </div>
 
@@ -209,10 +231,11 @@ export default function AdminDashboard({ onNavigate }) {
           </div>
         </div>
       </div>
-      
+      </div>{/* end flex-1 overflow-y-auto */}
+
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
           <div className="bg-[#1a1a1a] shadow-xl rounded-[18px] px-5 py-4 flex items-center gap-4 min-w-[300px]">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${toastMsg.isError ? "bg-[#fee2e2]" : "bg-[#d6f5e8]"}`}>
                {toastMsg.isError ? (

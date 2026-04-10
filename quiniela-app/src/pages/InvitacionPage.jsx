@@ -57,23 +57,58 @@ const PendingIcon = () => (
   </div>
 );
 
-// ── Decorative dots ──────────────────────────────────────────────────────────
-const DecorativeDots = () => (
+// ── Animated floating bubbles ────────────────────────────────────────────────
+const BUBBLES = [
+  // left side — large to small, top to bottom
+  { size: 28, top: "12%",  left: "5%",   color: "#f4a030", anim: "animate-float-b", dur: "5s",   delay: "0s",   opacity: 0.75, blur: 0 },
+  { size: 44, top: "38%",  left: "2%",   color: "#d6f5e8", anim: "animate-float-a", dur: "7s",   delay: "0.4s", opacity: 0.6,  blur: 1 },
+  { size: 12, top: "22%",  left: "14%",  color: "#ffe08a", anim: "animate-float-c", dur: "3.8s", delay: "1.1s", opacity: 0.9,  blur: 0 },
+  { size: 20, top: "58%",  left: "4%",   color: "#e2cfff", anim: "animate-float-b", dur: "6.2s", delay: "0.7s", opacity: 0.65, blur: 0 },
+  { size: 9,  top: "75%",  left: "18%",  color: "#f4a030", anim: "animate-float-a", dur: "4.5s", delay: "1.5s", opacity: 0.8,  blur: 0 },
+  { size: 16, top: "88%",  left: "8%",   color: "#b0d4ff", anim: "animate-float-c", dur: "5.5s", delay: "0.2s", opacity: 0.7,  blur: 0 },
+  // right side
+  { size: 14, top: "9%",   right: "8%",  color: "#b0d4ff", anim: "animate-float-a", dur: "4.2s", delay: "0.8s", opacity: 0.85, blur: 0 },
+  { size: 32, top: "28%",  right: "3%",  color: "#fce4d6", anim: "animate-float-c", dur: "6.5s", delay: "0.3s", opacity: 0.55, blur: 1 },
+  { size: 10, top: "50%",  right: "10%", color: "#d6f5e8", anim: "animate-float-b", dur: "4s",   delay: "1.2s", opacity: 0.9,  blur: 0 },
+  { size: 36, top: "68%",  right: "2%",  color: "#ffe08a", anim: "animate-float-a", dur: "8s",   delay: "0.6s", opacity: 0.4,  blur: 2 },
+  { size: 11, top: "82%",  right: "12%", color: "#e2cfff", anim: "animate-float-c", dur: "3.5s", delay: "0.9s", opacity: 0.8,  blur: 0 },
+  // center scattered
+  { size: 8,  top: "6%",   left: "46%",  color: "#3dbb78", anim: "animate-float-b", dur: "4.8s", delay: "0.5s", opacity: 0.7,  blur: 0 },
+  { size: 18, top: "93%",  left: "42%",  color: "#f4a030", anim: "animate-float-a", dur: "6s",   delay: "1.3s", opacity: 0.5,  blur: 0 },
+];
+
+const FloatingBubbles = () => (
   <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
-    {[
-      { size: 16, top: "18%", left: "7%",  color: "#f4a030" },
-      { size: 12, top: "14%", right: "8%", color: "#b0d4ff" },
-      { size: 10, top: "40%", left: "4%",  color: "#d6f5e8" },
-      { size: 18, top: "30%", right: "6%", color: "#fce4d6" },
-      { size: 8,  top: "8%",  left: "50%", color: "#ffe08a" },
-      { size: 22, top: "55%", left: "3%",  color: "#e2cfff", opacity: 0.6 },
-    ].map((d, i) => (
-      <div key={i} style={{
-        position: "absolute", borderRadius: "50%",
-        width: d.size, height: d.size,
-        background: d.color, opacity: d.opacity || 0.7,
-        top: d.top, left: d.left, right: d.right,
-      }} />
+    {BUBBLES.map((b, i) => (
+      /* Outer wrapper: pop-in entrance */
+      <div
+        key={i}
+        className="animate-bubble-in"
+        style={{
+          position: "absolute",
+          top: b.top,
+          left: b.left,
+          right: b.right,
+          width: b.size,
+          height: b.size,
+          animationDelay: b.delay,
+        }}
+      >
+        {/* Inner bubble: continuous float loop */}
+        <div
+          className={b.anim}
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            background: b.color,
+            opacity: b.opacity,
+            filter: b.blur ? `blur(${b.blur}px)` : undefined,
+            "--float-dur": b.dur,
+            animationDelay: b.delay,
+          }}
+        />
+      </div>
     ))}
   </div>
 );
@@ -213,9 +248,9 @@ export default function InvitacionPage() {
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#e8e8e4", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #e4e4e0 0%, #deded8 50%, #e8e8e2 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 40, height: 40, border: "3px solid #e4e4e0", borderTop: "3px solid #1a1a1a", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: 40, height: 40, border: "3px solid #e4e4e0", borderTop: "3px solid #3dbb78", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
         <p style={{ fontSize: 14, fontWeight: 600, color: "#6b6b6b" }}>Cargando invitación...</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -224,7 +259,7 @@ export default function InvitacionPage() {
 
   // ── Error ────────────────────────────────────────────────────────────────
   if (error) return (
-    <div style={{ minHeight: "100vh", background: "#e8e8e4", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "20px", fontFamily: font }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #e4e4e0 0%, #deded8 50%, #e8e8e2 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "20px", fontFamily: font }}>
       <div style={{ width: 56, height: 56, background: "#fee2e2", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </div>
@@ -241,11 +276,16 @@ export default function InvitacionPage() {
 
   // ── ESTADO 2: Pendiente de pago ──────────────────────────────────────────
   if (isPendiente) return (
-    <div style={{ minHeight: "100vh", background: "#e8e8e4", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", fontFamily: font }}>
-      <div style={{ width: "100%", maxWidth: 520, background: "#fafaf8", borderRadius: 20, boxShadow: "0 4px 40px rgba(0,0,0,0.10)", overflow: "hidden", position: "relative" }}>
-        {/* Blob */}
-        <div style={{ position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)", width: 900, height: 300, borderRadius: "0 0 55% 55%", background: "linear-gradient(145deg, #fce4ec 0%, #fde8d8 40%, #d6f5e8 100%)", opacity: 0.55, pointerEvents: "none" }} />
-        <DecorativeDots />
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #e4e4e0 0%, #deded8 50%, #e8e8e2 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", fontFamily: font }}>
+      <div className="animate-scale-in" style={{ width: "100%", maxWidth: 520, background: "#fafaf8", borderRadius: 20, boxShadow: "0 8px 48px rgba(0,0,0,0.12)", overflow: "hidden", position: "relative" }}>
+        {/* Blob wrapper: centering; inner: breathe animation */}
+        <div style={{ position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}>
+          <div
+            className="animate-breathe"
+            style={{ width: 900, height: 300, borderRadius: "0 0 55% 55%", background: "linear-gradient(145deg, #fce4ec 0%, #fde8d8 40%, #d6f5e8 100%)" }}
+          />
+        </div>
+        <FloatingBubbles />
 
         {/* Nav */}
         <nav style={{ position: "relative", zIndex: 10, height: 64, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between" }}>
@@ -341,17 +381,25 @@ export default function InvitacionPage() {
 
   // ── ESTADO 1: Default (no loggeado o no inscrito) ────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: "#e8e8e4", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", fontFamily: font }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #e4e4e0 0%, #deded8 50%, #e8e8e2 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", fontFamily: font }}>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
-        .inv-btn-primary:hover { background: #333 !important; }
+        @keyframes colorPing { 0%{transform:scale(1);opacity:0.8} 70%{transform:scale(2.2);opacity:0} 100%{transform:scale(2.2);opacity:0} }
+        .inv-btn-primary { transition: all 0.2s !important; }
+        .inv-btn-primary:hover { background: #333 !important; transform: translateY(-1px) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important; }
+        .inv-btn-primary:active { transform: scale(0.97) !important; }
         .inv-btn-copy:hover { background: #333 !important; }
       `}</style>
 
-      <div style={{ width: "100%", maxWidth: 520, background: "#fafaf8", borderRadius: 20, boxShadow: "0 4px 40px rgba(0,0,0,0.10)", overflow: "hidden", position: "relative" }}>
-        {/* Blob */}
-        <div style={{ position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)", width: 900, height: 300, borderRadius: "0 0 55% 55%", background: "linear-gradient(145deg, #fce4ec 0%, #fde8d8 40%, #d6f5e8 100%)", opacity: 0.55, pointerEvents: "none" }} />
-        <DecorativeDots />
+      <div className="animate-scale-in" style={{ width: "100%", maxWidth: 520, background: "#fafaf8", borderRadius: 20, boxShadow: "0 8px 48px rgba(0,0,0,0.12)", overflow: "hidden", position: "relative" }}>
+        {/* Blob wrapper: centering; inner: breathe animation */}
+        <div style={{ position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}>
+          <div
+            className="animate-breathe"
+            style={{ width: 900, height: 300, borderRadius: "0 0 55% 55%", background: "linear-gradient(145deg, #fce4ec 0%, #fde8d8 40%, #d6f5e8 100%)" }}
+          />
+        </div>
+        <FloatingBubbles />
 
         {/* Nav */}
         <nav style={{ position: "relative", zIndex: 10, height: 64, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between" }}>
@@ -377,18 +425,24 @@ export default function InvitacionPage() {
         <main style={{ position: "relative", zIndex: 5, padding: "0 24px 48px", display: "flex", flexDirection: "column", alignItems: "center" }}>
 
           {/* Invite badge */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#d6f5e8", border: "1px solid rgba(61,187,120,0.3)", borderRadius: 40, padding: "6px 16px", marginTop: 28, marginBottom: 20 }}>
-            <div style={{ width: 8, height: 8, background: "#3dbb78", borderRadius: "50%", animation: "pulse 2s infinite" }} />
+          <div
+            className="animate-fade-in-up animate-glow-pulse"
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #d6f5e8 0%, #c5f0dc 100%)", border: "1px solid rgba(61,187,120,0.4)", borderRadius: 40, padding: "6px 16px", marginTop: 28, marginBottom: 20, boxShadow: "0 2px 12px rgba(61,187,120,0.15)" }}
+          >
+            <div style={{ position: "relative", width: 8, height: 8, flexShrink: 0 }}>
+              <div style={{ width: 8, height: 8, background: "#3dbb78", borderRadius: "50%", position: "relative", zIndex: 1 }} />
+              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#3dbb78", animation: "colorPing 1.8s ease-out infinite" }} />
+            </div>
             <span style={{ fontSize: 12, fontWeight: 800, color: "#25854f", textTransform: "uppercase", letterSpacing: "0.6px", fontFamily: font }}>
               Tienes una invitación
             </span>
           </div>
 
           {/* Heading */}
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div className="animate-fade-in-up" style={{ textAlign: "center", marginBottom: 28, animationDelay: "0.1s" }}>
             <h1 style={{ fontSize: "clamp(28px, 7vw, 40px)", fontWeight: 900, color: "#1a1a1a", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: 10, fontFamily: font }}>
               Únete a{" "}
-              <em style={{ fontStyle: "normal", color: "#25854f" }}>{quiniela.nombre}</em>
+              <em style={{ fontStyle: "normal", background: "linear-gradient(135deg, #25854f 0%, #3dbb78 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{quiniela.nombre}</em>
             </h1>
             <p style={{ fontSize: 15, fontWeight: 500, color: "#6b6b6b", fontFamily: font }}>
               Predice, compite y gana el pozo del grupo.
@@ -396,7 +450,7 @@ export default function InvitacionPage() {
           </div>
 
           {/* Card */}
-          <div style={{ background: "rgba(255,255,255,0.72)", border: "1px solid #e4e4e0", borderRadius: 24, boxShadow: "0 4px 32px rgba(0,0,0,0.07)", backdropFilter: "blur(12px)", width: "100%", padding: 28, display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="animate-fade-in-up" style={{ background: "rgba(255,255,255,0.78)", border: "1px solid #e4e4e0", borderRadius: 24, boxShadow: "0 8px 40px rgba(0,0,0,0.09)", backdropFilter: "blur(14px)", width: "100%", padding: 28, display: "flex", flexDirection: "column", gap: 20, animationDelay: "0.2s" }}>
 
             {/* Quiniela header */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
@@ -430,9 +484,15 @@ export default function InvitacionPage() {
 
             {/* Stats */}
             <div style={{ display: "flex", gap: 10 }}>
-              <StatBox label="Pozo estimado" value={formatPozo(quiniela.pozo_acumulado || quiniela.precio_entrada * (quiniela.num_jugadores || 1))} sub={`${quiniela.num_jugadores} jugadores`} dark />
-              <StatBox label="Entrada" value={formatPozo(quiniela.precio_entrada)} sub="por jugador" />
-              <StatBox label="Cierre" value={formatFechaCorta(quiniela.cierre).split("·")[0].trim()} sub={formatFechaCorta(quiniela.cierre).split("·")[1]?.trim()} />
+              {[
+                { label: "Pozo estimado", value: formatPozo(quiniela.pozo_acumulado || quiniela.precio_entrada * (quiniela.num_jugadores || 1)), sub: `${quiniela.num_jugadores} jugadores`, dark: true },
+                { label: "Entrada",       value: formatPozo(quiniela.precio_entrada), sub: "por jugador" },
+                { label: "Cierre",        value: formatFechaCorta(quiniela.cierre).split("·")[0].trim(), sub: formatFechaCorta(quiniela.cierre).split("·")[1]?.trim() },
+              ].map((s, idx) => (
+                <div key={s.label} className="animate-fade-in-up" style={{ flex: 1, animationDelay: `${0.3 + idx * 0.08}s` }}>
+                  <StatBox {...s} />
+                </div>
+              ))}
             </div>
 
             {/* Divider */}

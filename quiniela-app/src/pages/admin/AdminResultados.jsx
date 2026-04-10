@@ -357,7 +357,7 @@ export default function AdminResultados({ onNavigate }) {
       {/* MODAL: Confirmar resolver */}
       {resolverModal && !resolverResult && (
         <Modal onClose={() => setResolverModal(false)}>
-          <div className="w-[380px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[380px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <div className="w-[42px] h-[42px] bg-[#fff3e0] rounded-[10px] flex items-center justify-center mb-5">
               <IconWarning size={20} color="#f4a030" />
             </div>
@@ -483,7 +483,7 @@ export default function AdminResultados({ onNavigate }) {
       {/* MODAL: Resultado de resolución */}
       {resolverResult && (
         <Modal onClose={() => { setResolverResult(null); setResolverModal(false); }}>
-          <div className="w-[400px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[400px] p-5 sm:p-7" style={{ fontFamily: font }}>
             {resolverResult.error ? (
               <>
                 <div className="w-[42px] h-[42px] bg-[#fee2e2] rounded-[10px] flex items-center justify-center mb-5">

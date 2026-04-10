@@ -9,7 +9,7 @@ export default function EmptyStatePage() {
       <Navbar variant="app" showWeek />
 
       <div className="flex-1 flex flex-col items-center justify-center -mt-10 px-6 sm:px-10">
-        <img src={EMPTY_STATE_IMG} alt="" className="w-[180px] sm:w-[220px] mb-6 object-contain" />
+        <img src={EMPTY_STATE_IMG} alt="" loading="lazy" decoding="async" className="w-[180px] sm:w-[220px] mb-6 object-contain" />
         <h2 className="text-[24px] sm:text-[28px] font-black text-[#1a1a1a] tracking-tight text-center" style={{ fontFamily: "Nunito, sans-serif" }}>
           Aún no tienes quinielas
         </h2>

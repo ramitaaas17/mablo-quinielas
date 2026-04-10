@@ -123,8 +123,11 @@ export default function TablaPage() {
     return (
       <div className="min-h-screen bg-[#fafaf8] flex flex-col">
         <Navbar variant="app" showWeek />
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-[14px] font-semibold text-[#6b6b6b]" style={{ fontFamily: font }}>Cargando quiniela...</p>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 animate-fade-in">
+          <div className="w-9 h-9 rounded-full border-[3px] border-[#e4e4e0] border-t-[#3dbb78] animate-spinner" />
+          <p className="text-[13px] font-semibold text-[#6b6b6b]" style={{ fontFamily: font }}>
+            Cargando quiniela...
+          </p>
         </div>
       </div>
     );
@@ -150,11 +153,11 @@ export default function TablaPage() {
     <div className="min-h-screen bg-[#fafaf8] flex flex-col">
       <Navbar variant="app" showWeek />
 
-      <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden">
+      <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden animate-fade-in">
         {quiniela.imagen_fondo ? (
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[60%] lg:w-[50%] pointer-events-none" style={{
-             maskImage: 'linear-gradient(to right, transparent, black 15%, black 100%)',
-             WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 100%)'
+          <div className="absolute right-0 top-0 bottom-0 w-[55%] sm:w-full md:w-[60%] lg:w-[50%] pointer-events-none" style={{
+             maskImage: 'linear-gradient(to right, transparent, black 35%, black 100%)',
+             WebkitMaskImage: 'linear-gradient(to right, transparent, black 35%, black 100%)'
           }}>
             <img
               src={quiniela.imagen_fondo}
@@ -166,6 +169,8 @@ export default function TablaPage() {
           <img
             src={MASCOT_TABLE}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="hidden sm:block absolute right-0 bottom-0 h-full object-contain object-right pointer-events-none"
           />
         )}
@@ -173,13 +178,13 @@ export default function TablaPage() {
         <div className="relative z-10 px-6 sm:px-10 lg:px-[90px] py-14 lg:py-16">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-[13px] font-bold text-[#6b6b6b] hover:text-[#1a1a1a] transition-colors mb-6"
+            className="flex items-center gap-2 text-[13px] font-bold text-[#6b6b6b] hover:text-[#1a1a1a] transition-colors mb-6 animate-fade-in"
             style={{ fontFamily: font }}
           >
             <img src={BACK_ICON} alt="" className="w-4 h-4" />
             Volver
           </button>
-          <h1 className="text-[26px] md:text-[30px] font-black text-[#1a1a1a] tracking-[-1px]" style={{ fontFamily: font }}>
+          <h1 className="text-[26px] md:text-[30px] font-black text-[#1a1a1a] tracking-[-1px] animate-fade-in-up" style={{ fontFamily: font }}>
             {quiniela.title}
           </h1>
           <p className="text-[12px] md:text-[13px] font-semibold text-[#6b6b6b] mt-1" style={{ fontFamily: font }}>
@@ -190,8 +195,8 @@ export default function TablaPage() {
               ["Pozo", quiniela.pozo],
               ["Jugadores", posiciones.length ? String(posiciones.length) : "—"],
               ["Partidos", quiniela.partidos],
-            ].map(([l, v]) => (
-              <div key={l} className="bg-[#f2f2ef] rounded-[14px] px-5 py-3 min-w-[90px] flex-shrink-0">
+            ].map(([l, v], i) => (
+              <div key={l} className="bg-[#f2f2ef] rounded-[14px] px-5 py-3 min-w-[90px] flex-shrink-0 animate-fade-in-up" style={{ animationDelay: `${0.1 + i * 0.07}s` }}>
                 <div className="text-[10px] font-bold uppercase tracking-[0.4px] text-[#6b6b6b]" style={{ fontFamily: font }}>{l}</div>
                 <div className="text-[18px] md:text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px] mt-1" style={{ fontFamily: font }}>{v}</div>
               </div>
@@ -265,14 +270,15 @@ export default function TablaPage() {
                     </div>
                   )}
 
-                  {posiciones.map((p) => {
+                  {posiciones.map((p, rowIdx) => {
                     const posColors = ["#f4a030", "#6b6b6b", "#b87333"];
                     const color = posColors[p.pos - 1] || "#1a1a1a";
                     const pct = numPartidos > 0 ? (p.puntos_total / numPartidos) * 100 : 0;
                     return (
                       <div
                         key={p.id_usr}
-                        className="grid grid-cols-[50px_1fr_100px_1fr] md:grid-cols-[65px_1fr_120px_1fr] items-center border-b border-[#e4e4e0] last:border-b-0 py-3 transition-colors hover:bg-[#fafaf8]"
+                        className="grid grid-cols-[50px_1fr_100px_1fr] md:grid-cols-[65px_1fr_120px_1fr] items-center border-b border-[#e4e4e0] last:border-b-0 py-3 transition-colors hover:bg-[#fafaf8] animate-fade-in"
+                        style={{ animationDelay: `${rowIdx * 40 + 100}ms` }}
                       >
                         <div className="px-4 text-[14px] font-black" style={{ fontFamily: font, color }}>
                           {p.pos}
@@ -292,8 +298,12 @@ export default function TablaPage() {
                         <div className="px-4 pr-6">
                           <div className="h-[6px] bg-[#f2f2ef] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#3dbb78] rounded-full transition-all"
-                              style={{ width: `${pct}%` }}
+                              className="h-full bg-[#3dbb78] rounded-full animate-bar-fill"
+                              style={{
+                                "--bar-target-w": `${pct}%`,
+                                animationDelay: `${(p.pos - 1) * 50 + 200}ms`,
+                                animationFillMode: "both",
+                              }}
                             />
                           </div>
                         </div>

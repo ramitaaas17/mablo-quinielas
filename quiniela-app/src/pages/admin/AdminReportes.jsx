@@ -91,17 +91,19 @@ export default function AdminReportes({ onNavigate }) {
                   </div>
                 )}
                 {quinielas.map((q) => (
-                  <div key={q.id} className="flex items-center gap-4 px-4 py-4 border-b border-[#e4e4e0] last:border-b-0 hover:bg-[#fafaf8] transition-colors">
-                    <div className="w-[34px] h-[34px] bg-[#f2f2ef] rounded-[8px] flex items-center justify-center flex-shrink-0">
-                      <IconFile size={14} color="#6b6b6b" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[14px] font-bold text-[#1a1a1a] leading-none" style={{ fontFamily: font }}>{q.nombre}</div>
-                      <div className="text-[11px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>
-                        {q.liga_nombre} · {q.num_partidos} partidos · {q.num_jugadores} jugadores · {q.estado}
+                  <div key={q.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-4 border-b border-[#e4e4e0] last:border-b-0 hover:bg-[#fafaf8] transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-[34px] h-[34px] bg-[#f2f2ef] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                        <IconFile size={14} color="#6b6b6b" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[14px] font-bold text-[#1a1a1a] leading-none" style={{ fontFamily: font }}>{q.nombre}</div>
+                        <div className="text-[11px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>
+                          {q.liga_nombre} · {q.num_partidos} partidos · {q.num_jugadores} jugadores · {q.estado}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-2 flex-wrap flex-shrink-0">
+                    <div className="flex gap-2 flex-wrap sm:ml-auto sm:flex-shrink-0">
                       {[
                         { label: "CSV Resultados", url: adminService.getReporteCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_resultados.csv` },
                         { label: "CSV Pagos", url: adminService.getReportePagosCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_pagos.csv` },
@@ -121,6 +123,7 @@ export default function AdminReportes({ onNavigate }) {
                     </div>
                   </div>
                 ))}
+
               </div>
             </div>
 

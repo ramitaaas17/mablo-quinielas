@@ -231,14 +231,19 @@ export function Sidebar({ active, onNavigate, onClose }) {
                 <button
                   key={item.id}
                   onClick={() => handleNav(item.id)}
-                  className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-[10px] text-[13px] font-bold transition-all ${
-                    isActive ? "bg-[#1a1a1a] text-white" : "text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a]"
+                  className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-[10px] text-[13px] font-bold transition-all duration-200 ${
+                    isActive
+                      ? "bg-[#1a1a1a] text-white shadow-md"
+                      : "text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] hover:translate-x-0.5"
                   }`}
                 >
                   <item.Icon size={14} color={isActive ? "white" : "#6b6b6b"} opacity={isActive ? 1 : 0.5} />
                   <span className="flex-1 text-left">{item.label}</span>
                   {item.badge && !isActive && (
-                    <span className="w-[6px] h-[6px] rounded-full bg-[#f4a030] flex-shrink-0" />
+                    <span className="relative flex-shrink-0 w-[6px] h-[6px]">
+                      <span className="w-[6px] h-[6px] rounded-full bg-[#f4a030] block relative z-10" />
+                      <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
+                    </span>
                   )}
                 </button>
               );
@@ -250,7 +255,7 @@ export function Sidebar({ active, onNavigate, onClose }) {
       {/* User footer */}
       <div className="border-t border-[#e4e4e0] px-2.5 py-3">
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] font-extrabold text-[#25854f] flex-shrink-0">
+          <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] font-extrabold text-[#25854f] flex-shrink-0 transition-transform duration-200 hover:scale-110">
             AD
           </div>
           <div className="flex flex-col flex-1 min-w-0">
@@ -290,11 +295,13 @@ export function TopBar({ title, badge, children, onMenuToggle }) {
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {children}
-        <div className="relative w-8 h-8 bg-white border border-[#e4e4e0] rounded-[9px] flex items-center justify-center flex-shrink-0">
+        <div className="relative w-8 h-8 bg-white border border-[#e4e4e0] rounded-[9px] flex items-center justify-center flex-shrink-0 hover:bg-[#f2f2ef] transition-colors cursor-pointer">
           <IconBell size={14} color="#6b6b6b" />
-          <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full bg-[#f4a030] border border-white" />
+          <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full bg-[#f4a030] border border-white">
+            <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
+          </span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[12px] font-extrabold text-[#25854f] flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[12px] font-extrabold text-[#25854f] flex-shrink-0 transition-all duration-200 hover:scale-110 hover:shadow-md hover:shadow-[#3dbb78]/30">
           AD
         </div>
       </div>
@@ -306,10 +313,13 @@ export function TopBar({ title, badge, children, onMenuToggle }) {
 export function AdminStatCard({ label, value, sub, dark = false, accent }) {
   return (
     <div
-      className={`flex-1 rounded-[14px] border px-4 py-3 flex flex-col gap-1 min-w-0 ${
+      className={`flex-1 rounded-[14px] border px-4 py-3 flex flex-col gap-1 min-w-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
         dark ? "bg-[#1a1a1a] border-[#1a1a1a]" : "bg-white border-[#e4e4e0]"
       }`}
-      style={{ fontFamily: font }}
+      style={{
+        fontFamily: font,
+        ...(accent && !dark ? { borderTopColor: accent, borderTopWidth: 2 } : {}),
+      }}
     >
       <span
         className={`text-[10px] font-bold uppercase tracking-[0.4px] ${dark ? "text-white/50" : "text-[#6b6b6b]"}`}
@@ -433,8 +443,9 @@ export function MiniQuinielaCard({ title, league, status, pozo, pagados, partido
   const ratio = parseInt((pagados || "0/1").split("/")[0]) / parseInt((pagados || "1/1").split("/")[1] || 1);
 
   return (
-    <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden flex flex-col p-[17px] gap-3 relative" style={{ fontFamily: font }}>
-      <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-[14px]" style={{ background: accent }} />
+    <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden flex flex-col p-[17px] gap-3 relative group animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_24px_rgba(0,0,0,0.08)]" style={{ fontFamily: font }}>
+      {/* Accent bar grows on hover */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] transition-all duration-300 group-hover:h-[5px] rounded-t-[14px]" style={{ background: accent }} />
       {/* Header */}
       <div className="flex items-start justify-between pt-1">
         <div className="flex flex-col gap-[2px]">
@@ -456,7 +467,15 @@ export function MiniQuinielaCard({ title, league, status, pozo, pagados, partido
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <div className="flex-1 h-[5px] bg-[#f2f2ef] rounded-full overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${ratio * 100}%`, background: accent }} />
+            <div
+              className="h-full rounded-full animate-bar-fill"
+              style={{
+                "--bar-target-w": `${ratio * 100}%`,
+                background: accent,
+                animationFillMode: "both",
+                animationDelay: "0.3s",
+              }}
+            />
           </div>
           <span className="text-[10px] font-bold text-[#6b6b6b]">{pagados}</span>
         </div>
@@ -520,9 +539,9 @@ export function SelectField({ label, value, onChange, options = [], className = 
 // ─── MODAL WRAPPER ──────────────────────────────────────────────────────────
 export function Modal({ children, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative z-10 bg-white rounded-[16px] shadow-[0_8px_60px_rgba(0,0,0,0.15)] overflow-hidden">
+      <div className="relative z-10 bg-white rounded-t-[20px] sm:rounded-[16px] shadow-[0_-4px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_8px_60px_rgba(0,0,0,0.15)] overflow-hidden w-full sm:w-auto max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto sm:max-w-[calc(100vw-32px)]">
         {children}
       </div>
     </div>

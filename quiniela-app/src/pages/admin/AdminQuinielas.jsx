@@ -294,13 +294,13 @@ export default function AdminQuinielas({ onNavigate }) {
       <TopBar title="Quinielas" badge={`${quinielas.length} total`} />
 
       {/* Stats banner */}
-      <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-7 pt-7 pb-7 flex-shrink-0">
+      <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-4 md:px-7 pt-7 pb-7 flex-shrink-0">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1400px] h-[260px] rounded-b-[415px] opacity-45 pointer-events-none"
           style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }} />
         <div className="relative z-10">
           <h1 className="text-[22px] font-black text-[#1a1a1a] tracking-[-0.6px]" style={{ fontFamily: font }}>Gestión de Quinielas</h1>
           <p className="text-[12px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>Crea, edita y administra tus quinielas.</p>
-          <div className="flex gap-2.5 mt-4 flex-wrap">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
             <AdminStatCard label="Abiertas"  value={String(abiertas.length)}  sub="activas ahora" />
             <AdminStatCard label="Cerradas"  value={String(cerradas.length)}  sub="sin resolver" />
             <AdminStatCard label="Resueltas" value={String(resueltas.length)} sub="finalizadas" />
@@ -325,7 +325,7 @@ export default function AdminQuinielas({ onNavigate }) {
               {abiertas.length === 0 && (
                 <p className="text-[13px] text-[#6b6b6b]" style={{ fontFamily: font }}>Sin quinielas abiertas.</p>
               )}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 {abiertas.map((q, i) => (
                   <div key={q.id} className="flex flex-col gap-2">
                     <MiniQuinielaCard
@@ -404,7 +404,7 @@ export default function AdminQuinielas({ onNavigate }) {
       {/* MODAL: Crear quiniela */}
       {showCreate && (
         <Modal onClose={() => { setShowCreate(false); setCreateError(""); }}>
-          <div className="w-[440px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[440px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Nueva quiniela</h2>
             <p className="text-[13px] font-medium text-[#6b6b6b] mt-1 mb-5">Configura los datos de la nueva quiniela.</p>
 
@@ -469,7 +469,7 @@ export default function AdminQuinielas({ onNavigate }) {
       {/* MODAL: Editar quiniela */}
       {editTarget && (
         <Modal onClose={() => { setEditTarget(null); setEditError(""); }}>
-          <div className="w-[440px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[440px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Editar quiniela</h2>
             <p className="text-[13px] font-medium text-[#6b6b6b] mt-1 mb-5">Modifica los detalles de la quiniela {editTarget.nombre}.</p>
 
@@ -525,7 +525,7 @@ export default function AdminQuinielas({ onNavigate }) {
       {/* MODAL: Importar partidos desde Liga MX */}
       {importTarget && (
         <Modal onClose={() => { setImportTarget(null); setImportError(""); }}>
-          <div className="w-[560px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[560px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Importar partidos de Liga MX</h2>
             <p className="text-[13px] font-medium text-[#6b6b6b] mt-1 mb-5">
               {importTarget.nombre} — selecciona los partidos que quieres incluir.
@@ -632,7 +632,7 @@ export default function AdminQuinielas({ onNavigate }) {
       {/* MODAL: Cerrar quiniela */}
       {closeTarget && (
         <Modal onClose={() => setCloseTarget(null)}>
-          <div className="w-[360px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[360px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <div className="w-[42px] h-[42px] bg-[#fff3e0] rounded-[10px] flex items-center justify-center mb-5">
               <IconWarning size={20} color="#f4a030" />
             </div>

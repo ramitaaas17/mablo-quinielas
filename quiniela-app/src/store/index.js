@@ -20,7 +20,7 @@ export const useStore = create(
         }
       }),
 
-      logout: () => set({ user: null, misPredicciones: {} }),
+      logout: () => set({ user: null, misPredicciones: {}, _cache: {} }),
 
       // ─── PREDICCIONES LOCALES ────────────────────────────────────────────────
       // Estructura: { quinielaId: { partidoId: ['L', 'E'] } }
@@ -39,6 +39,24 @@ export const useStore = create(
             [quinielaId]: mapa,
           }
         }));
+      },
+
+      // ─── CACHÉ DE DATOS ─────────────────────────────────────────────────────
+      // Almacena datos de páginas en memoria para navegación instantánea.
+      // No se persiste en localStorage — se limpia al recargar la página.
+      _cache: {},
+
+      setCache: (key, data) => set(state => ({
+        _cache: { ...state._cache, [key]: { data, at: Date.now() } }
+      })),
+
+      // Devuelve los datos si son frescos (maxAge en ms, default 45s).
+      // Devuelve null si no existe o si expiró.
+      getCache: (key, maxAge = 45_000) => {
+        const entry = get()._cache[key];
+        if (!entry) return null;
+        if (Date.now() - entry.at > maxAge) return null;
+        return entry.data;
       },
 
       guardarPrediccion: (quinielaId, partidoId, prediccion) => {

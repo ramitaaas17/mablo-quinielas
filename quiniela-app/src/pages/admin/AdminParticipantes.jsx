@@ -99,7 +99,7 @@ export default function AdminParticipantes({ onNavigate }) {
       <TopBar title="Participantes" badge={`${usuarios.length} usuarios`} />
 
       {/* Stats banner */}
-      <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-7 pt-7 pb-7 flex-shrink-0">
+      <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-4 md:px-7 pt-7 pb-7 flex-shrink-0">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1400px] h-[260px] rounded-b-[415px] opacity-45 pointer-events-none"
           style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }} />
         <div className="relative z-10">
@@ -200,7 +200,7 @@ export default function AdminParticipantes({ onNavigate }) {
       {/* MODAL: Agregar participante */}
       {showAdd && (
         <Modal onClose={() => { setShowAdd(false); setAddError(""); }}>
-          <div className="w-[420px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[420px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Agregar participante</h2>
             <p className="text-[13px] font-medium text-[#6b6b6b] mt-1 mb-5">Completa los datos para registrar un nuevo usuario.</p>
 
@@ -248,7 +248,7 @@ export default function AdminParticipantes({ onNavigate }) {
       {/* MODAL: Eliminar participante */}
       {deleteTarget && (
         <Modal onClose={() => setDeleteTarget(null)}>
-          <div className="w-[360px] p-7" style={{ fontFamily: font }}>
+          <div className="w-full sm:w-[360px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <div className="w-[42px] h-[42px] bg-[#fff3e0] rounded-[10px] flex items-center justify-center mb-5">
               <IconWarning size={20} color="#f4a030" />
             </div>
