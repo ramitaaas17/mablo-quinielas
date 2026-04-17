@@ -41,19 +41,29 @@ export const useStore = create(
       // ─── PREDICCIONES LOCALES ────────────────────────────────────────────────
       // Estructura: { quinielaId: { partidoId: ['L', 'E'] } }
       misPredicciones: {},
+      misX2: {}, // { quinielaId: partidoId }
+      hasUnsavedChanges: false,
+      setHasUnsavedChanges: (val) => set({ hasUnsavedChanges: val }),
 
       setPrediccionesQuiniela: (quinielaId, prediccionesApi) => {
         // prediccionesApi viene de GET /predicciones/mis-predicciones/<id>
-        // Formato API: [{ id_partido, selecciones }]
+        // Formato API: [{ id_partido, selecciones, es_x2 }]
         const mapa = {};
+        let x2PartidoId = null;
         for (const p of prediccionesApi) {
           mapa[p.id_partido] = p.selecciones || [];
+          if (p.es_x2) x2PartidoId = p.id_partido;
         }
         set((state) => ({
           misPredicciones: {
             ...state.misPredicciones,
             [quinielaId]: mapa,
-          }
+          },
+          misX2: {
+            ...state.misX2,
+            [quinielaId]: x2PartidoId,
+          },
+          hasUnsavedChanges: false
         }));
       },
 
@@ -112,7 +122,32 @@ export const useStore = create(
                 ...quinielaPreds,
                 [partidoId]: newPicks,
               }
-            }
+            },
+            hasUnsavedChanges: true
+          };
+        });
+      },
+
+      toggleX2: (quinielaId, partidoId, totalPartidos) => {
+        set((state) => {
+          if (totalPartidos < 3) return state; // No permitido
+
+          const quinielaPreds = state.misPredicciones[quinielaId] || {};
+          const currentPicks = quinielaPreds[partidoId] || [];
+          
+          if (Array.isArray(currentPicks) && currentPicks.length === 2) {
+            return state; // Mutualmente excluyente con selección doble
+          }
+
+          const currentX2 = state.misX2[quinielaId];
+          const newX2 = currentX2 === partidoId ? null : partidoId;
+
+          return {
+            misX2: {
+              ...state.misX2,
+              [quinielaId]: newX2
+            },
+            hasUnsavedChanges: true
           };
         });
       },

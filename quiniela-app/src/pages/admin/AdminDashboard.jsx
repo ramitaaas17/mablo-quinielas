@@ -69,9 +69,9 @@ export default function AdminDashboard({ onNavigate }) {
             <p className="text-[12px] font-semibold text-[#6b6b6b] mt-0.5 animate-fade-in" style={{ fontFamily: font, animationDelay: "0.1s" }}>
               {loading ? "Cargando datos..." : `${s.quinielas_activas || 0} quinielas activas · ${s.total_usuarios || 0} participantes`}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5 mt-4">
               {[
-                { label: "Pozo total activo",  value: `$${(s.pozo_total || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`, sub: "acumulado",    dark: true },
+                { label: "Bolsa total activa",  value: `$${(s.pozo_total || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`, sub: "acumulado",    dark: true },
                 { label: "Participantes",      value: String(s.total_usuarios || 0),    sub: "registrados" },
                 { label: "Pagos confirmados",  value: String(s.pagos_confirmados || 0), sub: "esta semana",  accent: "#3dbb78" },
                 { label: "Pagos pendientes",   value: String(s.pagos_pendientes || 0),  sub: "sin confirmar",accent: "#f4a030" },
@@ -91,7 +91,7 @@ export default function AdminDashboard({ onNavigate }) {
 
         {/* Contenido principal */}
         <div className="px-4 md:px-7 py-5">
-        <div className="flex flex-col xl:grid xl:grid-cols-[1fr_252px] gap-[18px]">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_252px] gap-[18px]">
           {/* Left column */}
           <div className="flex flex-col gap-[18px]">
             {/* Quinielas activas */}
@@ -99,13 +99,13 @@ export default function AdminDashboard({ onNavigate }) {
               <SectionHeader
                 title="Quinielas activas"
                 action="Nueva"
-                actionIcon={<IconPlus size={11} color="white" />}
+                actionIcon={<IconPlus size={11} color="currentColor" />}
                 onAction={() => onNavigate && onNavigate("quinielas")}
               />
               {quinielas.length === 0 && !loading && (
                 <p className="text-[13px] text-[#6b6b6b]" style={{ fontFamily: font }}>Sin quinielas activas.</p>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {quinielas.map((q, i, arr) => {
                   const handleShareLink = async () => {
                     try {

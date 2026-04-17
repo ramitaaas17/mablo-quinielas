@@ -164,7 +164,7 @@ export default function AdminResultados({ onNavigate }) {
                     {quiniela.nombre}
                   </h2>
                   <p className="text-[13px] font-semibold text-[#6b6b6b]" style={{ fontFamily: font }}>
-                    {(quiniela.partidos || []).filter(p => !p.cancelado).length} partidos · {posiciones.length} jugadores · Pozo ${(quiniela.pozo_acumulado || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                    {(quiniela.partidos || []).filter(p => !p.cancelado).length} partidos · {posiciones.length} jugadores · Bolsa acumulada ${(quiniela.pozo_acumulado || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-wrap">

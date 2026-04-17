@@ -74,6 +74,7 @@ class Prediccion(db.Model):
     id_usr = db.Column(UUID(as_uuid=True), db.ForeignKey('usuario.id_usr', ondelete='CASCADE'), nullable=False)
     id_partido = db.Column(UUID(as_uuid=True), db.ForeignKey('partidos.id_partido', ondelete='CASCADE'), nullable=False)
     selecciones = db.Column(ARRAY(db.String), nullable=False)
+    es_x2 = db.Column(db.Boolean, nullable=False, default=False)
     es_correcta = db.Column(db.Boolean, nullable=True, default=None)
     fecha = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
 

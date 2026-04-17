@@ -104,7 +104,7 @@ export default function AdminPagos({ onNavigate }) {
             </button>
           </div>
           <div className="flex gap-2.5 mt-4 flex-wrap">
-            <AdminStatCard label="Pozo acumulado" value={`$${pozoConfirmado.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`} sub={`${pagadosCount} confirmados`} dark />
+            <AdminStatCard label="Bolsa acumulada" value={`$${pozoConfirmado.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`} sub={`${pagadosCount} confirmados`} dark />
             <AdminStatCard label="Pagados"        value={String(pagadosCount)}    sub={`de ${pagos.length}`} />
             <AdminStatCard label="Pendientes"     value={String(pendientesCount)} sub="sin confirmar" accent="#f4a030" />
           </div>

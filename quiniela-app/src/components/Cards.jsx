@@ -181,7 +181,7 @@ export function QuinielaCard({
         <div className="border-t border-[#e4e4e0] pt-3 grid grid-cols-2 gap-y-3 gap-x-2">
           {resolved ? (
             <>
-              <DataPair label="Pozo final" value={pozo} />
+              <DataPair label="Bolsa final" value={pozo} />
               <DataPair label="Ganador"    value={ganador} />
               <DataPair label="Tu pos."    value={posicion} />
               <DataPair label="Aciertos"   value={puntos} />
@@ -190,12 +190,12 @@ export function QuinielaCard({
             <>
               <DataPair label="Mi pos."  value={posicion} />
               <DataPair label="Mis pts"  value={misPoints} />
-              <DataPair label="Pozo"     value={pozo} />
+              <DataPair label="Bolsa acumulada"     value={pozo} />
               <DataPair label="Pagué"    value={pague} />
             </>
           ) : (
             <>
-              <DataPair label="Pozo"     value={pozo} />
+              <DataPair label="Bolsa acumulada"     value={pozo} />
               <DataPair label="Entrada"  value={entrada} />
               <DataPair label="Partidos" value={partidos} />
               <DataPair label="Cierre"   value={cierre} />

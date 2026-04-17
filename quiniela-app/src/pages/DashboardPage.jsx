@@ -132,7 +132,7 @@ export default function DashboardPage() {
           {/* StatCards — staggered entrance */}
           <div className="flex gap-3 sm:gap-4 mt-8 flex-wrap lg:pr-64">
             {[
-              { label: "Pozo total activo",   value: formatPozo(stats.balance),    sub: `en ${stats.openCount} quinielas`, dark: true },
+              { label: "Bolsa total activa",   value: formatPozo(stats.balance),    sub: `en ${stats.openCount} quinielas`, dark: true },
               { label: "Quinielas abiertas",  value: String(stats.openCount),      sub: "disponibles ahora" },
               { label: "Tus puntos",          value: String(stats.totalPoints),    sub: "acumulados" },
               { label: "Tu posición",         value: stats.position,              sub: stats.totalPlayers > 0 ? `de ${stats.totalPlayers} jugadores` : "—" },

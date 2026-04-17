@@ -219,13 +219,13 @@ export function Navbar({ showWeek = false, variant = "app" }) {
                   className={cn(
                     "text-[13px] font-bold px-4 h-[30px] rounded-full flex items-center transition-all duration-200",
                     activeLink === l.id || (activeLink === "" && l.id === "inicio")
-                      ? "text-white"
+                      ? ""
                       : "text-[#6b6b6b] hover:text-[#1a1a1a] hover:bg-[#f2f2ef]"
                   )}
                   style={{
                     fontFamily: "Nunito, sans-serif",
                     ...(activeLink === l.id || (activeLink === "" && l.id === "inicio")
-                      ? { backgroundColor: "var(--text)" }
+                      ? { backgroundColor: "var(--text)", color: "var(--bg)" }
                       : {}),
                   }}
                 >

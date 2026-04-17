@@ -314,13 +314,13 @@ export default function AdminQuinielas({ onNavigate }) {
               <SectionHeader
                 title="Quinielas abiertas"
                 action="Nueva"
-                actionIcon={<IconPlus size={11} color="white" />}
+                actionIcon={<IconPlus size={11} color="currentColor" />}
                 onAction={() => setShowCreate(true)}
               />
               {abiertas.length === 0 && (
                 <p className="text-[13px] text-[#6b6b6b]" style={{ fontFamily: font }}>Sin quinielas abiertas.</p>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {abiertas.map((q, i) => (
                   <div key={q.id} className="flex flex-col gap-2">
                     <MiniQuinielaCard
@@ -369,7 +369,7 @@ export default function AdminQuinielas({ onNavigate }) {
                   <table className="w-full" style={{ fontFamily: font }}>
                     <thead>
                       <tr className="border-b border-[#e4e4e0]">
-                        {["Nombre", "Liga", "Partidos", "Jugadores", "Pozo", "Estado"].map(h => (
+                        {["Nombre", "Liga", "Partidos", "Jugadores", "Bolsa acumulada", "Estado"].map(h => (
                           <th key={h} className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-[0.4px] text-[#6b6b6b]">{h}</th>
                         ))}
                       </tr>

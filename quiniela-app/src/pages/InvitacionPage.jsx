@@ -480,7 +480,7 @@ export default function InvitacionPage() {
             {/* Stats */}
             <div style={{ display: "flex", gap: 10 }}>
               {[
-                { label: "Pozo estimado", value: formatPozo(quiniela.pozo_acumulado || quiniela.precio_entrada * (quiniela.num_jugadores || 1)), sub: `${quiniela.num_jugadores} jugadores`, dark: true },
+                { label: "Bolsa estimada", value: formatPozo(quiniela.pozo_acumulado || quiniela.precio_entrada * (quiniela.num_jugadores || 1)), sub: `${quiniela.num_jugadores} jugadores`, dark: true },
                 { label: "Entrada",       value: formatPozo(quiniela.precio_entrada), sub: "por jugador" },
                 { label: "Cierre",        value: formatFechaCorta(quiniela.cierre).split("·")[0].trim(), sub: formatFechaCorta(quiniela.cierre).split("·")[1]?.trim() },
               ].map((s, idx) => (

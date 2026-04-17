@@ -199,7 +199,7 @@ const NAV_ITEMS = [
   { id: "reportes",       label: "Reportes",      Icon: IconReport,  section: "quinielas" },
 ];
 
-export function Sidebar({ active, onNavigate, onClose }) {
+export function Sidebar({ active, onNavigate, onClose, collapsed, onToggleCollapse }) {
   const { theme, toggleTheme } = useStore();
   const isDark = theme === 'dark';
 
@@ -214,86 +214,161 @@ export function Sidebar({ active, onNavigate, onClose }) {
   };
 
   return (
-    <aside className="w-[196px] flex-shrink-0 border-r border-[#e4e4e0] flex flex-col h-full bg-white" style={{ fontFamily: font }}>
+    <aside
+      className={`flex-shrink-0 border-r border-[#e4e4e0] flex flex-col h-full overflow-hidden transition-[width] duration-200 ease-out ${
+        collapsed ? 'w-[60px]' : 'w-[196px]'
+      }`}
+      style={{ fontFamily: font, backgroundColor: "var(--surface)" }}
+    >
       {/* Logo header */}
-      <div className="border-b border-[#e4e4e0] px-4 py-5 flex items-center gap-2.5">
-        <LogoIcon size={48} />
-        <div className="flex flex-col gap-[2px] flex-1">
-          <span className="text-[14px] font-black text-[#1a1a1a] tracking-[-0.3px] leading-none">Quiniepicks</span>
-          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-[4px] uppercase tracking-[0.5px] w-fit"
-            style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}>Admin</span>
-        </div>
-        {onClose && (
-          <button onClick={onClose} className="ml-auto p-1 rounded-[6px] hover:bg-[#f2f2ef] transition-colors md:hidden">
-            <IconX size={16} color="#6b6b6b" />
-          </button>
+      <div className={`border-b border-[#e4e4e0] flex items-center flex-shrink-0 h-[72px] ${collapsed ? 'justify-center px-1' : 'px-4 gap-2.5'}`}>
+        <LogoIcon size={collapsed ? 32 : 44} />
+        {!collapsed && (
+          <>
+            <div className="flex flex-col gap-[2px] flex-1 min-w-0">
+              <span className="text-[14px] font-black text-[#1a1a1a] tracking-[-0.3px] leading-none">Quiniepicks</span>
+              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-[4px] uppercase tracking-[0.5px] w-fit"
+                style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}>Admin</span>
+            </div>
+            {onClose && (
+              <button onClick={onClose} className="ml-auto p-1 rounded-[6px] hover:bg-[#f2f2ef] transition-colors lg:hidden">
+                <IconX size={16} color="#6b6b6b" />
+              </button>
+            )}
+          </>
         )}
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 flex flex-col gap-0.5 overflow-y-auto">
-        {sections.map((sec) => (
-          <div key={sec.id}>
-            <div className="px-2 pt-2.5 pb-2">
-              <span className="text-[9px] font-extrabold text-[#6b6b6b] uppercase tracking-[0.8px]">{sec.label}</span>
-            </div>
-            {NAV_ITEMS.filter((i) => i.section === sec.id).map((item) => {
+        {collapsed ? (
+          /* ── Mini mode: icons only ── */
+          <div className="flex flex-col gap-1">
+            {NAV_ITEMS.map((item) => {
               const isActive = active === item.id;
               return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNav(item.id)}
-                  className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-[10px] text-[13px] font-bold transition-all duration-200 ${
-                    isActive ? "shadow-sm" : "text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] hover:translate-x-0.5"
-                  }`}
-                  style={isActive ? { backgroundColor: "var(--text)", color: "var(--bg)" } : {}}
-                >
-                  <item.Icon
-                    size={14}
-                    color={isActive ? (isDark ? "#101010" : "white") : "#6b6b6b"}
-                    opacity={isActive ? 1 : 0.5}
-                  />
-                  <span className="flex-1 text-left">{item.label}</span>
+                <div key={item.id} className="relative">
+                  <button
+                    onClick={() => handleNav(item.id)}
+                    title={item.label}
+                    className={`w-full flex items-center justify-center p-[10px] rounded-[10px] transition-all duration-200 ${
+                      isActive ? "shadow-sm" : "hover:bg-[#f2f2ef]"
+                    }`}
+                    style={isActive ? { backgroundColor: "var(--text)" } : {}}
+                  >
+                    <item.Icon
+                      size={16}
+                      color={isActive ? (isDark ? "#101010" : "white") : "#6b6b6b"}
+                      opacity={isActive ? 1 : 0.65}
+                    />
+                  </button>
                   {item.badge && !isActive && (
-                    <span className="relative flex-shrink-0 w-[6px] h-[6px]">
-                      <span className="w-[6px] h-[6px] rounded-full bg-[#f4a030] block relative z-10" />
+                    <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full bg-[#f4a030] pointer-events-none">
                       <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
                     </span>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
-        ))}
+        ) : (
+          /* ── Full mode: sections + labels ── */
+          sections.map((sec) => (
+            <div key={sec.id}>
+              <div className="px-2 pt-2.5 pb-2">
+                <span className="text-[9px] font-extrabold text-[#6b6b6b] uppercase tracking-[0.8px]">{sec.label}</span>
+              </div>
+              {NAV_ITEMS.filter((i) => i.section === sec.id).map((item) => {
+                const isActive = active === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNav(item.id)}
+                    className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-[10px] text-[13px] font-bold transition-all duration-200 ${
+                      isActive ? "shadow-sm" : "text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] hover:translate-x-0.5"
+                    }`}
+                    style={isActive ? { backgroundColor: "var(--text)", color: "var(--bg)" } : {}}
+                  >
+                    <item.Icon
+                      size={14}
+                      color={isActive ? (isDark ? "#101010" : "white") : "#6b6b6b"}
+                      opacity={isActive ? 1 : 0.5}
+                    />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge && !isActive && (
+                      <span className="relative flex-shrink-0 w-[6px] h-[6px]">
+                        <span className="w-[6px] h-[6px] rounded-full bg-[#f4a030] block relative z-10" />
+                        <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))
+        )}
       </nav>
 
-      {/* User footer */}
-      <div className="border-t border-[#e4e4e0] px-2.5 py-3 flex flex-col gap-2">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-[8px] hover:bg-[#f2f2ef] transition-colors text-[11px] font-bold text-[#6b6b6b]"
-        >
-          <span className="w-[18px] flex items-center justify-center" style={{ color: isDark ? "#f4a030" : "#6b6b6b" }}>
-            {isDark ? <IconSun size={13} /> : <IconMoon size={13} />}
-          </span>
-          {isDark ? "Tema claro" : "Tema oscuro"}
-        </button>
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] font-extrabold text-[#25854f] flex-shrink-0 transition-transform duration-200 hover:scale-110">
-            AD
-          </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-[12px] font-extrabold text-[#1a1a1a] leading-none truncate">Admin</span>
-            <span className="text-[10px] font-semibold text-[#6b6b6b] leading-none mt-0.5 truncate">Administrador</span>
-          </div>
+      {/* Collapse toggle — only for persistent desktop sidebar */}
+      {onToggleCollapse && (
+        <div className={`px-3 pb-2 flex ${collapsed ? 'justify-center' : 'justify-start'}`}>
           <button
-            onClick={() => useStore.getState().logout()}
-            className="text-[10px] font-extrabold text-white bg-[#d93025] hover:bg-[#b91c1c] px-2 py-1 rounded transition-colors flex-shrink-0"
+            onClick={onToggleCollapse}
+            title={collapsed ? "Mostrar menú" : "Ocultar menú"}
+            className="flex items-center justify-center w-8 h-8 rounded-[8px] hover:bg-[#f2f2ef] text-[#6b6b6b] hover:text-[#1a1a1a] transition-colors"
           >
-            Salir
+            <IconMenu size={18} />
           </button>
         </div>
+      )}
+
+      {/* User footer */}
+      <div className={`border-t border-[#e4e4e0] py-3 flex flex-col gap-2 ${collapsed ? 'px-1 items-center' : 'px-2.5'}`}>
+        {/* Theme toggle */}
+        <div className={`flex ${collapsed ? 'justify-center' : 'justify-start'} w-full px-1`}>
+          <button
+            onClick={toggleTheme}
+            title={isDark ? "Tema claro" : "Tema oscuro"}
+            className="flex items-center justify-center w-8 h-8 rounded-[8px] hover:bg-[#f2f2ef] transition-colors"
+          >
+            {isDark ? <IconSun size={15} color="#f4a030" /> : <IconMoon size={15} color="#6b6b6b" />}
+          </button>
+        </div>
+
+        {collapsed ? (
+          /* Collapsed user area */
+          <>
+            <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] font-extrabold text-[#25854f] flex-shrink-0 transition-transform duration-200 hover:scale-110">
+              AD
+            </div>
+            <button
+              onClick={() => useStore.getState().logout()}
+              title="Salir"
+              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-white bg-[#d93025] hover:bg-[#b91c1c] transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M5 7h7M9.5 4.5L12 7 9.5 9.5M7.5 2H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h5.5" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </>
+        ) : (
+          /* Expanded user area */
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] font-extrabold text-[#25854f] flex-shrink-0 transition-transform duration-200 hover:scale-110">
+              AD
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-[12px] font-extrabold text-[#1a1a1a] leading-none truncate">Admin</span>
+              <span className="text-[10px] font-semibold text-[#6b6b6b] leading-none mt-0.5 truncate">Administrador</span>
+            </div>
+            <button
+              onClick={() => useStore.getState().logout()}
+              className="text-[10px] font-extrabold text-white bg-[#d93025] hover:bg-[#b91c1c] px-2 py-1 rounded transition-colors flex-shrink-0"
+            >
+              Salir
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -309,7 +384,7 @@ export function TopBar({ title, badge, children, onMenuToggle }) {
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onMenuToggle}
-          className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-[#f2f2ef] transition-colors flex-shrink-0"
+          className="lg:hidden w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-[#f2f2ef] transition-colors flex-shrink-0"
         >
           <IconMenu size={18} color="var(--text)" />
         </button>
@@ -416,8 +491,20 @@ export function Badge({ label }) {
 // ─── ADMIN LAYOUT WRAPPER ────────────────────────────────────────────────────
 export function AdminLayout({ active, onNavigate, children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem("admin-sidebar-collapsed") === "true"; }
+    catch { return false; }
+  });
 
-  // Pasar onMenuToggle a TopBar clonando el primer hijo que sea TopBar
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("admin-sidebar-collapsed", String(next)); } catch {}
+      return next;
+    });
+  };
+
+  // Inyectar onMenuToggle al primer TopBar hijo
   const childrenWithMenu = Array.isArray(children)
     ? children.map((child, i) =>
         i === 0 && child?.type === TopBar
@@ -431,26 +518,36 @@ export function AdminLayout({ active, onNavigate, children }) {
   return (
     <div className="flex w-full h-screen overflow-hidden" style={{ backgroundColor: "var(--bg)" }}>
 
-      {/* Sidebar desktop — siempre visible en md+ */}
-      <div className="hidden md:flex flex-shrink-0">
-        <Sidebar active={active} onNavigate={onNavigate} />
+      {/* Sidebar — visible en lg+ (desktop), colapsable */}
+      <div className="hidden lg:flex flex-shrink-0">
+        <Sidebar
+          active={active}
+          onNavigate={onNavigate}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebar}
+        />
       </div>
 
-      {/* Drawer overlay — solo móvil */}
+      {/* Drawer overlay — móvil y tablet (< lg) */}
       {drawerOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px] md:hidden"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px] lg:hidden"
           onClick={() => setDrawerOpen(false)}
         />
       )}
 
-      {/* Drawer sidebar — solo móvil */}
+      {/* Drawer sidebar — móvil y tablet (< lg) */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 md:hidden transition-transform duration-200 ease-out ${
+        className={`fixed inset-y-0 left-0 z-50 lg:hidden transition-transform duration-200 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <Sidebar active={active} onNavigate={onNavigate} onClose={() => setDrawerOpen(false)} />
+        <Sidebar
+          active={active}
+          onNavigate={onNavigate}
+          onClose={() => setDrawerOpen(false)}
+          collapsed={false}
+        />
       </div>
 
       {/* Contenido principal */}
@@ -486,7 +583,7 @@ export function MiniQuinielaCard({ title, league, status, pozo, pagados, partido
         <Badge label={status} />
       </div>
       <div className="border-t border-[#e4e4e0] pt-3 grid grid-cols-2 gap-y-2">
-        {[["Pozo", pozo], ["Pagados", pagados], ["Partidos", partidos], ["Cierre", cierre]].map(([l, v]) => (
+        {[["Bolsa acumulada", pozo], ["Pagados", pagados], ["Partidos", partidos], ["Cierre", cierre]].map(([l, v]) => (
           <div key={l} className="flex flex-col gap-0.5">
             <span className="text-[9px] font-bold uppercase tracking-[0.3px] text-[#6b6b6b]">{l}</span>
             <span className="text-[13px] font-black text-[#1a1a1a]">{v}</span>

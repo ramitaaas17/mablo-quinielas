@@ -207,7 +207,7 @@ export default function TablaPage() {
           </p>
           <div className="flex gap-3 mt-5 overflow-x-auto pb-2">
             {[
-              ["Pozo", quiniela.pozo],
+              ["Bolsa acumulada", quiniela.pozo],
               ["Jugadores", posiciones.length ? String(posiciones.length) : "—"],
               ["Partidos", quiniela.partidos],
             ].map(([l, v], i) => (
@@ -328,20 +328,20 @@ export default function TablaPage() {
             </div>
 
             <div className="w-full lg:w-[320px] flex-shrink-0">
-              <div className="bg-white border border-[#e4e4e0] rounded-[20px] overflow-hidden">
-                <div className="border-b border-[#e4e4e0] px-5 py-4 bg-[#fafaf8]">
-                  <span className="text-[13px] font-extrabold text-[#1a1a1a]" style={{ fontFamily: font }}>Detalles</span>
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[20px] overflow-hidden">
+                <div className="border-b border-[var(--border)] px-5 py-4 bg-[var(--surface-3)]">
+                  <span className="text-[13px] font-extrabold text-[var(--text)]" style={{ fontFamily: font }}>Detalles</span>
                 </div>
                 <div className="p-5 flex flex-col">
-                  <div className="w-full flex flex-col divide-y divide-[#e4e4e0]">
+                  <div className="w-full flex flex-col divide-y divide-[var(--border)]">
                     {[
-                      { label: "Pozo acumulado", value: quiniela.pozo, valueColor: "#1a1a1a" },
-                      { label: "Cierre",          value: quiniela.cierre, valueColor: "#ea4335" },
-                      { label: "Participantes",   value: posiciones.length || "—", valueColor: "#1a1a1a" },
-                      { label: "Partidos",         value: quiniela.partidos, valueColor: "#1a1a1a" },
+                      { label: "Bolsa acumulada", value: quiniela.pozo, valueColor: "var(--text)" },
+                      { label: "Cierre",          value: quiniela.cierre, valueColor: "var(--red)" },
+                      { label: "Participantes",   value: posiciones.length || "—", valueColor: "var(--text)" },
+                      { label: "Partidos",         value: quiniela.partidos, valueColor: "var(--text)" },
                     ].map((r) => (
                       <div key={r.label} className="flex items-center justify-between py-3">
-                        <span className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>{r.label}</span>
+                        <span className="text-[12px] font-bold text-[var(--text-2)]" style={{ fontFamily: font }}>{r.label}</span>
                         <span className="text-[13px] font-extrabold" style={{ fontFamily: font, color: r.valueColor }}>{r.value}</span>
                       </div>
                     ))}

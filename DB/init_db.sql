@@ -76,6 +76,7 @@ CREATE TABLE prediccion (
     id_usr UUID NOT NULL REFERENCES usuario(id_usr) ON DELETE CASCADE,
     id_partido UUID NOT NULL REFERENCES partidos(id_partido) ON DELETE CASCADE,
     selecciones TEXT[] NOT NULL CHECK (array_length(selecciones, 1) BETWEEN 1 AND 2),
+    es_x2 BOOLEAN NOT NULL DEFAULT FALSE,
     es_correcta BOOLEAN DEFAULT NULL,
     fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_pred UNIQUE (id_usr, id_partido)
@@ -161,15 +162,15 @@ BEGIN
 
     -- 2. Actualizar puntos_total solo para participantes con pago confirmado
     UPDATE usuario_quiniela uq
-    SET puntos_total = (
-        SELECT COUNT(*)
+    SET puntos_total = COALESCE((
+        SELECT SUM(CASE WHEN p.es_x2 THEN 2 ELSE 1 END)
         FROM prediccion p
         JOIN partidos pa ON p.id_partido = pa.id_partido
         WHERE p.id_usr = uq.id_usr
           AND pa.id_quiniela = p_id_quiniela
           AND p.es_correcta = TRUE
           AND pa.cancelado = false
-    )
+    ), 0)
     WHERE uq.id_quiniela = p_id_quiniela
       AND EXISTS (
           SELECT 1 FROM pagos pg

@@ -45,6 +45,7 @@ def crear_prediccion():
         return jsonify({"error": "No estás inscrito en esta quiniela"}), 403
 
     selecciones = data.get('selecciones', [])
+    es_x2 = bool(data.get('es_x2', False))
     if not isinstance(selecciones, list) or len(selecciones) < 1 or len(selecciones) > 2:
         return jsonify({"error": "Selecciones inválidas (1 o 2 permitidas)"}), 400
 
@@ -65,9 +66,27 @@ def crear_prediccion():
             if p.selecciones and len(p.selecciones) == 2:
                 return jsonify({"error": "Ya usaste el comodín en otro partido de esta quiniela"}), 400
 
+    if len(selecciones) == 2 and es_x2:
+        return jsonify({"error": "No puedes usar comodín doble y x2 en el mismo partido"}), 400
+
+    if es_x2:
+        partidos_q = Partido.query.filter_by(id_quiniela=partido.id_quiniela).all()
+        ids_partidos = [p.id_partido for p in partidos_q]
+        if len(ids_partidos) < 3:
+            return jsonify({"error": "Los comodines requieren quinielas de al menos 3 partidos"}), 400
+        preds_con_x2 = Prediccion.query.filter(
+            Prediccion.id_usr == id_usr,
+            Prediccion.id_partido.in_(ids_partidos),
+            Prediccion.id_partido != partido.id_partido,
+        ).all()
+        for p in preds_con_x2:
+            if p.es_x2:
+                return jsonify({"error": "Ya usaste el comodín x2 en otro partido de esta quiniela"}), 400
+
     existente = Prediccion.query.filter_by(id_usr=id_usr, id_partido=id_partido).first()
     if existente:
         existente.selecciones = selecciones
+        existente.es_x2 = es_x2
         existente.fecha = datetime.datetime.now()
         db.session.commit()
         return jsonify({"mensaje": "Predicción actualizada", "id": str(existente.id_pred)}), 200
@@ -77,6 +96,7 @@ def crear_prediccion():
             id_usr=id_usr,
             id_partido=id_partido,
             selecciones=selecciones,
+            es_x2=es_x2
         )
         db.session.add(pred)
         db.session.commit()
@@ -104,6 +124,7 @@ def crear_predicciones_bulk():
     for item in predicciones_data:
         id_partido = item.get('id_partido')
         selecciones = item.get('selecciones', [])
+        es_x2 = bool(item.get('es_x2', False))
 
         if not id_partido:
             errores.append({"id_partido": None, "error": "Falta id_partido"})
@@ -138,11 +159,16 @@ def crear_predicciones_bulk():
         if any(s not in SELECCIONES_VALIDAS for s in selecciones):
             errores.append({"id_partido": id_partido, "error": "Selección inválida"})
             continue
+            
+        if len(selecciones) == 2 and es_x2:
+            errores.append({"id_partido": id_partido, "error": "No puedes usar ambos comodines en 1 partido"})
+            continue
 
         try:
             existente = Prediccion.query.filter_by(id_usr=id_usr, id_partido=id_partido).first()
             if existente:
                 existente.selecciones = selecciones
+                existente.es_x2 = es_x2
                 existente.fecha = datetime.datetime.now()
                 resultados.append({"id_partido": id_partido, "accion": "actualizada"})
             else:
@@ -150,6 +176,7 @@ def crear_predicciones_bulk():
                     id_usr=id_usr,
                     id_partido=id_partido,
                     selecciones=selecciones,
+                    es_x2=es_x2
                 )
                 db.session.add(pred)
                 resultados.append({"id_partido": id_partido, "accion": "guardada"})
@@ -178,5 +205,6 @@ def mis_predicciones(id_quiniela):
         "id_pred": str(p.id_pred),
         "id_partido": str(p.id_partido),
         "selecciones": p.selecciones,
+        "es_x2": p.es_x2,
         "es_correcta": p.es_correcta,
     } for p in preds]), 200

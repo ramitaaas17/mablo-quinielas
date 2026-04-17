@@ -174,7 +174,7 @@ const BTN_COLORS = {
   },
   V: {
     idle:     "bg-transparent border-[#e4e4e0] text-[#6b6b6b] hover:bg-[#fafaf8]",
-    selected: "bg-[#f0f7fc] border-[#168fe5] text-[#1069a8]",
+    selected: "bg-[#f2fbf6] border-[#3dbb78] text-[#25854f]",
     hit:      "bg-[#168fe5] border-[#168fe5] text-white shadow-[0_4px_14px_rgba(22,143,229,0.45)] scale-[1.02]",
     miss:     "bg-[#fee2e2] border-[#fca5a5] text-[#ef4444]",
     correct:  "bg-[#e0f0fc] border-[#168fe5]/60 text-[#1069a8] opacity-75",
@@ -190,7 +190,7 @@ export function PrediccionesView({
   onSolicitarUnirme = null,
   isJoining = false,
 }) {
-  const { misPredicciones, guardarPrediccion } = useStore();
+  const { misPredicciones, guardarPrediccion, misX2, toggleX2, hasUnsavedChanges, setHasUnsavedChanges } = useStore();
   const [saving, setSaving]           = useState(false);
   const [saveMsg, setSaveMsg]         = useState("");
   const [saveMsgType, setSaveMsgType] = useState("success"); // "success" | "error"
@@ -209,6 +209,9 @@ export function PrediccionesView({
 
   const wildcardMatch   = partidos.find((p) => Array.isArray(preds[p.id]) && preds[p.id].length === 2);
   const wildcardMatchId = wildcardMatch?.id ?? null;
+
+  const x2MatchId       = misX2[quiniela.id] || null;
+  const x2Match         = partidos.find((p) => String(p.id) === String(x2MatchId)) || null;
 
   /* ── Cierre check ── */
   const isClosed = useMemo(() => {
@@ -254,12 +257,13 @@ export function PrediccionesView({
 
     const payload = Object.entries(preds)
       .filter(([, picks]) => Array.isArray(picks) && picks.length > 0)
-      .map(([id_partido, selecciones]) => ({ id_partido, selecciones }));
+      .map(([id_partido, selecciones]) => ({ id_partido, selecciones, es_x2: id_partido === x2MatchId }));
 
     try {
       await prediccionService.guardarBulk(payload);
       setSaveMsg("¡Predicciones guardadas!");
       setSaveMsgType("success");
+      setHasUnsavedChanges(false);
     } catch (err) {
       const msg = err?.response?.data?.error || "Error al guardar. Intenta de nuevo.";
       setSaveMsg(msg);
@@ -389,7 +393,7 @@ export function PrediccionesView({
             </span>
           </div>
 
-          {/* Wildcard banner */}
+          {/* Wildcard banner doble */}
           <div className="flex justify-between items-center bg-[#f2f2ef] rounded-lg px-4 py-3 mb-2">
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill={wildcardMatch ? "#f4a030" : "#b0b0a8"} stroke={wildcardMatch ? "#f4a030" : "#b0b0a8"} strokeLinejoin="round" strokeWidth="2">
@@ -397,14 +401,33 @@ export function PrediccionesView({
               </svg>
               <span className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>
                 {wildcardMatch
-                  ? `Comodín: ${wildcardMatch.local} vs ${wildcardMatch.visitante}`
-                  : "Comodín disponible — 2 selecciones en 1 partido"}
+                  ? `Comodín doble: ${wildcardMatch.local} vs ${wildcardMatch.visitante}`
+                  : "Comodín doble disponible — 2 selecciones en 1 partido"}
               </span>
             </div>
             <span className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>
               {wildcardMatch ? "0" : "1"} disponibles
             </span>
           </div>
+
+          {/* Wildcard banner x2 */}
+          {partidos.length >= 3 && (
+            <div className="flex justify-between items-center bg-[#d1fae5] rounded-lg px-4 py-3 mb-2">
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill={x2Match ? "#059669" : "#34d399"} stroke={x2Match ? "#059669" : "#34d399"} strokeLinejoin="round" strokeWidth="2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                <span className="text-[12px] font-bold text-[#065f46]" style={{ fontFamily: font }}>
+                  {x2Match
+                    ? `Comodín ×2: ${x2Match.local} vs ${x2Match.visitante}`
+                    : "Comodín ×2 disponible — doble puntos en 1 partido"}
+                </span>
+              </div>
+              <span className="text-[12px] font-bold text-[#065f46]" style={{ fontFamily: font }}>
+                {x2Match ? "0" : "1"} disponibles
+              </span>
+            </div>
+          )}
 
           {/* ── Partido cards ── */}
           {partidos.map((p, idx) => {
@@ -601,6 +624,25 @@ export function PrediccionesView({
                   })}
                 </div>
 
+                {/* Botón Comodín x2 */}
+                {!matchFinished && partidos.length >= 3 && arrSeleccion.length < 2 && (!wildcardMatchId || wildcardMatchId !== String(p.id)) && (
+                  <button 
+                    onClick={() => toggleX2(quiniela.id, String(p.id), partidos.length)}
+                    className={cn(
+                      "mt-1 w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-[10px] border text-[11px] font-bold transition-all duration-200",
+                      x2MatchId === String(p.id) 
+                        ? "bg-[#059669] border-[#059669] text-white shadow-sm" 
+                        : "bg-transparent border-[#e4e4e0] text-[#6b6b6b] hover:bg-[#fafaf8]"
+                    )}
+                    style={{ fontFamily: font }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill={x2MatchId === String(p.id) ? "white" : "currentColor"} stroke={x2MatchId === String(p.id) ? "white" : "currentColor"} strokeLinejoin="round" strokeWidth="2">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    {x2MatchId === String(p.id) ? "×2 Activado" : "Activar ×2"}
+                  </button>
+                )}
+
                 {/* Hit / miss verdict text */}
                 {matchFinished && userPicked && (
                   <div
@@ -717,7 +759,7 @@ export function PrediccionesView({
 
             <div className="flex flex-col gap-3 mb-6">
               <div className="flex justify-between items-center text-[12px]" style={{ fontFamily: font }}>
-                <span className="font-bold text-[#6b6b6b]">Pozo</span>
+                <span className="font-bold text-[#6b6b6b]">Bolsa acumulada</span>
                 <span className="font-black text-[#1a1a1a]">{quiniela.pozo}</span>
               </div>
               <div className="flex justify-between items-center text-[12px]" style={{ fontFamily: font }}>
@@ -727,6 +769,11 @@ export function PrediccionesView({
             </div>
 
             <div className="flex flex-col gap-2 relative">
+              {!isClosed && hasUnsavedChanges && (
+                <div className="text-[12px] font-bold text-center rounded-[10px] px-3 py-2.5 bg-[#fefce8] border border-[#fbbf24] text-[#92400e]" style={{ fontFamily: font }}>
+                  Tienes cambios sin guardar — recuerda presionar Guardar
+                </div>
+              )}
               {saveMsg && (
                 <div
                   className={cn(
