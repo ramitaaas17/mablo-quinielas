@@ -8,10 +8,10 @@ import { adminService } from "../../services/quinielaService";
 const font = "Nunito, sans-serif";
 
 const actionBadgeStyle = {
-  "Predicción":        { bg: "#d6f5e8", text: "#25854f" },
-  "Pago enviado":      { bg: "#f2f2ef", text: "#1d4ed8" },
-  "Pago confirmado":   { bg: "#d6f5e8", text: "#25854f" },
-  "Nuevo usuario":     { bg: "#fde8d8", text: "#a05a00" },
+  "Predicción":        { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  "Pago enviado":      { bg: "var(--surface-2)",   text: "var(--blue-text)" },
+  "Pago confirmado":   { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  "Nuevo usuario":     { bg: "var(--orange-pale)", text: "var(--orange-text)" },
 };
 
 function timeAgo(iso) {
@@ -59,7 +59,7 @@ export default function AdminDashboard({ onNavigate }) {
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 pointer-events-none">
             <div
               className="w-[1400px] h-[260px] rounded-b-[415px] opacity-45 animate-breathe"
-              style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }}
+              style={{ backgroundImage: "var(--hero-blob-img)" }}
             />
           </div>
           <div className="relative z-10">
@@ -158,7 +158,7 @@ export default function AdminDashboard({ onNavigate }) {
             </div>
 
             {/* Actividad reciente */}
-            <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden">
+            <div className="border border-[#e4e4e0] rounded-[14px] overflow-hidden" style={{ backgroundColor: "var(--surface)" }}>
               <div className="border-b border-[#e4e4e0] px-4 py-3">
                 <span className="text-[12px] font-extrabold text-[#1a1a1a]" style={{ fontFamily: font }}>Actividad reciente</span>
               </div>
@@ -176,17 +176,20 @@ export default function AdminDashboard({ onNavigate }) {
                     <tr><td colSpan={4} className="px-3 py-4 text-[12px] text-[#6b6b6b] text-center">Sin actividad reciente.</td></tr>
                   )}
                   {actividad.map((r, i) => {
-                    const bs = actionBadgeStyle[r.tipo] || { bg: "#f2f2ef", text: "#6b6b6b" };
+                    const bs = actionBadgeStyle[r.tipo] || { bg: "var(--surface-2)", text: "var(--text-2)" };
                     return (
                       <tr
                         key={i}
-                        className="border-b border-[#e4e4e0] last:border-b-0 animate-fade-in transition-colors hover:bg-[#fafaf8]"
+                        className="border-b border-[#e4e4e0] last:border-b-0 animate-fade-in transition-colors"
+                        style={{ cursor: "default" }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = "var(--bg)"}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = ""}
                         style={{ animationDelay: `${i * 40 + 100}ms` }}
                       >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] flex items-center justify-center text-[10px] font-extrabold flex-shrink-0"
-                              style={{ color: "#25854f", boxShadow: "0 0 0 1.5px #e4e4e0" }}>
+                              style={{ color: "var(--green-dk)", boxShadow: "0 0 0 1.5px var(--border)" }}>
                               {r.initials}
                             </div>
                             <span className="text-[12px] font-extrabold text-[#1a1a1a] whitespace-nowrap">{r.usuario}</span>
@@ -210,7 +213,7 @@ export default function AdminDashboard({ onNavigate }) {
           {/* Right column */}
           <div className="flex flex-col gap-3.5">
             {/* Resumen financiero */}
-            <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden p-px">
+            <div className="border border-[#e4e4e0] rounded-[14px] overflow-hidden p-px" style={{ backgroundColor: "var(--surface)" }}>
               <div className="border-b border-[#e4e4e0] px-4 py-3">
                 <span className="text-[12px] font-extrabold text-[#1a1a1a]" style={{ fontFamily: font }}>Resumen</span>
               </div>
@@ -218,7 +221,7 @@ export default function AdminDashboard({ onNavigate }) {
                 {[
                   { l: "Usuarios", v: String(s.total_usuarios || 0) },
                   { l: "Pagos confirmados", v: String(s.pagos_confirmados || 0) },
-                  { l: "Pagos pendientes", v: String(s.pagos_pendientes || 0), color: "#f4a030" },
+                  { l: "Pagos pendientes", v: String(s.pagos_pendientes || 0), color: "var(--orange)" },
                   { l: "Quinielas activas", v: String(s.quinielas_activas || 0) },
                 ].map(({ l, v, color }) => (
                   <div key={l} className="flex justify-between items-center py-2 border-b border-[#e4e4e0] last:border-0">

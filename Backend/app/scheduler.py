@@ -83,7 +83,7 @@ def actualizar_marcadores(app) -> None:
             from .models    import Partido, Quiniela, Equipo
             from . import scraper
 
-            ahora   = datetime.datetime.utcnow()
+            ahora   = datetime.datetime.now()
             hace_5h = ahora - datetime.timedelta(hours=5)
 
             # Partidos que podrían estar en vivo o recién terminados:

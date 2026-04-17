@@ -17,7 +17,7 @@ from ..extensions import db, limiter
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB máx
+MAX_IMAGE_BYTES = 15 * 1024 * 1024  # 15 MB máx
 ALLOWED_TYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
 
 
@@ -236,7 +236,7 @@ def get_codigo_invitacion(id_quiniela):
 @admin_required
 def crear_quiniela():
     data = request.get_json(silent=True) or {}
-    campos = ['nombre', 'id_liga', 'inicio', 'cierre', 'precio_entrada', 'comision']
+    campos = ['nombre', 'id_liga', 'cierre', 'precio_entrada', 'comision']
     for campo in campos:
         if data.get(campo) is None:
             return jsonify({"error": f"Falta el campo: {campo}"}), 400
@@ -245,7 +245,7 @@ def crear_quiniela():
         q = Quiniela(
             nombre=data['nombre'],
             id_liga=data['id_liga'],
-            inicio=datetime.datetime.fromisoformat(data['inicio']),
+            inicio=datetime.datetime.now(),
             cierre=datetime.datetime.fromisoformat(data['cierre']),
             precio_entrada=float(data['precio_entrada']),
             comision=float(data['comision']),
@@ -370,6 +370,7 @@ def obtener_participantes(id_quiniela):
             "nombre": usr.nombre_completo,
             "correo": usr.correo,
             "initials": _initials(usr.nombre_completo),
+            "foto_perfil": usr.foto_perfil or None,
             "puntos": uq.puntos_total,
             "estado_pago": pago.estado if pago else "sin_pago",
             "metodo_pago": pago.metodo if pago else None,
@@ -705,6 +706,7 @@ def listar_usuarios():
             "username": u.username,
             "correo": u.correo,
             "initials": _initials(u.nombre_completo),
+            "foto_perfil": u.foto_perfil or None,
             "equipo_favorito": eq.nombre if eq else None,
             "num_quinielas": num_quinielas,
             "total_puntos": int(total_puntos),
@@ -767,293 +769,673 @@ def eliminar_usuario(id_usuario):
     return jsonify({"mensaje": "Usuario eliminado"}), 200
 
 
-# ─── REPORTES CSV ─────────────────────────────────────────────────────────────
+# ─── PALETA DE DISEÑO ─────────────────────────────────────────────────────────
+
+_C = {
+    'dark':        '#1a1a1a',
+    'green':       '#3dbb78',
+    'green_dark':  '#25854f',
+    'green_light': '#d6f5e8',
+    'orange':      '#f4a030',
+    'orange_light':'#fff3e0',
+    'red':         '#ef4444',
+    'red_light':   '#fee2e2',
+    'gray':        '#6b6b6b',
+    'border':      '#e4e4e0',
+    'bg':          '#fafaf8',
+    'bg2':         '#f2f2ef',
+    'white':       '#ffffff',
+    'gold':        '#d97706',
+    'gold_light':  '#fef3c7',
+    'silver':      '#64748b',
+    'silver_light':'#f1f5f9',
+    'bronze':      '#92400e',
+    'bronze_light':'#fde8ca',
+}
+
+
+# ─── EXCEL HELPERS ────────────────────────────────────────────────────────────
+
+def _xl_font(bold=False, size=10, color='1A1A1A', name='Calibri'):
+    from openpyxl.styles import Font
+    return Font(name=name, bold=bold, size=size, color=color.lstrip('#').upper())
+
+def _xl_fill(hex_color):
+    from openpyxl.styles import PatternFill
+    return PatternFill(fill_type='solid', fgColor=hex_color.lstrip('#').upper())
+
+def _xl_side(color='E4E4E0'):
+    from openpyxl.styles import Side
+    return Side(style='thin', color=color.lstrip('#').upper())
+
+def _xl_border_all(color='E4E4E0'):
+    from openpyxl.styles import Border
+    s = _xl_side(color)
+    return Border(left=s, right=s, top=s, bottom=s)
+
+def _xl_border_bottom(color='E4E4E0'):
+    from openpyxl.styles import Border
+    return Border(bottom=_xl_side(color))
+
+def _xl_align(h='left', v='center', wrap=False):
+    from openpyxl.styles import Alignment
+    return Alignment(horizontal=h, vertical=v, wrap_text=wrap)
+
+def _xl_col_widths(ws, widths):
+    from openpyxl.utils import get_column_letter
+    for col, w in enumerate(widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = w
+
+def _xl_header_band(ws, title, meta_lines, n_cols):
+    """Fila 1 oscura (título), fila 2 verde (metadatos)."""
+    from openpyxl.styles import Font, Alignment
+    ws.row_dimensions[1].height = 32
+    ws.row_dimensions[2].height = 18
+    for c in range(1, n_cols + 1):
+        ws.cell(row=1, column=c).fill = _xl_fill(_C['dark'])
+        ws.cell(row=2, column=c).fill = _xl_fill(_C['green_dark'])
+    t = ws.cell(row=1, column=1, value=title)
+    t.font  = Font(name='Calibri', bold=True, size=14, color='FFFFFF')
+    t.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=n_cols)
+    m = ws.cell(row=2, column=1, value=meta_lines)
+    m.font  = Font(name='Calibri', size=8, color='FFFFFF')
+    m.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=n_cols)
+
+def _xl_table_header(ws, row_num, headers, bg=None, wrap=False):
+    ws.row_dimensions[row_num].height = 28 if wrap else 20
+    bg = (bg or _C['dark']).lstrip('#').upper()
+    for col, h in enumerate(headers, 1):
+        c = ws.cell(row=row_num, column=col, value=h)
+        c.font      = _xl_font(bold=True, size=8, color='FFFFFF')
+        c.fill      = _xl_fill(bg)
+        c.alignment = _xl_align('center', 'center', wrap=wrap)
+        c.border    = _xl_border_all(bg)
+
+def _xl_data_row(ws, row_num, values, alt=False):
+    ws.row_dimensions[row_num].height = 16
+    bg = _C['bg'] if alt else _C['white']
+    for col, v in enumerate(values, 1):
+        c = ws.cell(row=row_num, column=col, value=v)
+        c.font      = _xl_font(size=9)
+        c.fill      = _xl_fill(bg)
+        c.alignment = _xl_align('left', 'center')
+        c.border    = _xl_border_bottom()
+
+def _xl_status_cell(cell, estado):
+    map_ = {
+        'confirmado': (_C['green_light'],  _C['green_dark']),
+        'pendiente':  (_C['orange_light'], _C['orange']),
+        'rechazado':  (_C['red_light'],    _C['red']),
+    }
+    bg, fg = map_.get(estado, (_C['bg2'], _C['gray']))
+    estado_label = {'confirmado': 'Confirmado', 'pendiente': 'Pendiente',
+                    'rechazado': 'Rechazado'}.get(estado, estado)
+    cell.value     = estado_label
+    cell.fill      = _xl_fill(bg)
+    cell.font      = _xl_font(bold=True, size=8, color=fg)
+    cell.alignment = _xl_align('center', 'center')
+
+def _xl_rank_row(ws, row_num, values, pos):
+    """Fila de datos con resaltado dorado/plata/bronce para top 3."""
+    colors_map = {
+        1: (_C['gold_light'],   _C['gold'],   '1.'),
+        2: (_C['silver_light'], _C['silver'], '2.'),
+        3: (_C['bronze_light'], _C['bronze'], '3.'),
+    }
+    if pos in colors_map:
+        bg, fg, _ = colors_map[pos]
+        ws.row_dimensions[row_num].height = 18
+        for col, v in enumerate(values, 1):
+            c = ws.cell(row=row_num, column=col, value=v)
+            c.fill      = _xl_fill(bg)
+            c.font      = _xl_font(bold=True, size=9, color=fg)
+            c.alignment = _xl_align('center' if col == 1 else 'left', 'center')
+            c.border    = _xl_border_bottom(fg)
+    else:
+        _xl_data_row(ws, row_num, values, alt=(pos % 2 == 0))
+
+
+# ─── EXCEL: Reporte general ───────────────────────────────────────────────────
 
 @admin_bp.route('/reportes/<id_quiniela>/csv', methods=['GET'])
 @admin_required
 def reporte_csv(id_quiniela):
-    q = Quiniela.query.get_or_404(id_quiniela)
-    partidos = Partido.query.filter_by(id_quiniela=id_quiniela).order_by(Partido.inicio.asc()).all()
-    participantes = UsuarioQuiniela.query.filter_by(id_quiniela=id_quiniela).all()
+    import openpyxl
+    q            = Quiniela.query.get_or_404(id_quiniela)
+    liga         = Liga.query.get(q.id_liga)
+    partidos     = Partido.query.filter_by(id_quiniela=id_quiniela).order_by(Partido.inicio.asc()).all()
+    participantes = UsuarioQuiniela.query.filter_by(id_quiniela=id_quiniela).order_by(
+        UsuarioQuiniela.puntos_total.desc()).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
+    wb = openpyxl.Workbook()
 
-    # Cabecera
-    headers = ['Jugador', 'Correo', 'Puntos']
-    for i, p in enumerate(partidos, start=1):
-        eq_l = Equipo.query.get(p.local)
-        eq_v = Equipo.query.get(p.visitante)
-        headers.append(f'P{i} ({eq_l.nombre if eq_l else "?"} vs {eq_v.nombre if eq_v else "?"})')
-    headers.extend(['Estado Pago'])
-    writer.writerow(headers)
+    # ── Hoja 1: Predicciones ──────────────────────────────────────────────────
+    ws = wb.active
+    ws.title = "Predicciones"
+    ws.sheet_view.showGridLines = False
 
-    for uq in participantes:
-        usr = Usuario.query.get(uq.id_usr)
-        if not usr:
-            continue
-        pago = Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela).first()
-        row = [usr.nombre_completo, usr.correo, uq.puntos_total]
+    n_cols  = 5 + len(partidos)
+    meta    = (f"{liga.nombre if liga else 'Liga MX'}   |   Estado: {q.estado.capitalize()}   |   "
+               f"Pozo: ${float(q.pozo_acumulado):,.0f}   |   "
+               f"Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    _xl_header_band(ws, f"Reporte de Predicciones  —  {q.nombre}", meta, n_cols)
+    ws.row_dimensions[3].height = 8   # separador
+
+    # Cabecera de tabla: partidos con nombre corto y fecha en wrap
+    match_hdrs = []
+    for i, p in enumerate(partidos, 1):
+        el = Equipo.query.get(p.local)
+        ev = Equipo.query.get(p.visitante)
+        nl = el.nombre[:6] if el else '?'
+        nv = ev.nombre[:6] if ev else '?'
+        match_hdrs.append(f'P{i}\n{nl} v {nv}')
+    _xl_table_header(ws, 4, ['#', 'Jugador', 'Correo', 'Pts', 'Pago'] + match_hdrs, wrap=True)
+
+    for idx, uq in enumerate(participantes, 1):
+        usr   = Usuario.query.get(uq.id_usr)
+        if not usr: continue
+        pago  = Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela).first()
+        picks = []
         for p in partidos:
-            pred = Prediccion.query.filter_by(id_usr=uq.id_usr, id_partido=p.id_partido).first()
-            if pred:
-                row.append('/'.join(pred.selecciones))
-            else:
-                row.append('-')
-        row.append(pago.estado if pago else 'sin_pago')
-        writer.writerow(row)
+            pr = Prediccion.query.filter_by(id_usr=uq.id_usr, id_partido=p.id_partido).first()
+            picks.append('/'.join(pr.selecciones) if pr else '-')
+        rn = 4 + idx
+        _xl_data_row(ws, rn, [idx, usr.nombre_completo, usr.correo, uq.puntos_total, ''] + picks, alt=(idx % 2 == 0))
+        _xl_status_cell(ws.cell(row=rn, column=5), pago.estado if pago else 'sin_pago')
+        ws.cell(row=rn, column=1).alignment = _xl_align('center', 'center')
+        ws.cell(row=rn, column=4).alignment = _xl_align('center', 'center')
 
-    output.seek(0)
-    nombre_archivo = q.nombre.replace(' ', '_').replace('—', '-')
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={
-            'Content-Disposition': f'attachment; filename="{nombre_archivo}_reporte.csv"'
-        }
-    )
+    ws.freeze_panes = 'A5'
+    # Anchos: fijo para columnas de nombre/correo, pequeño para partidos
+    pw = max(6, min(10, 90 // max(len(partidos), 1)))
+    _xl_col_widths(ws, [4, 24, 30, 5, 13] + [pw] * len(partidos))
 
+    # ── Hoja 2: Marcadores ───────────────────────────────────────────────────
+    ws2 = wb.create_sheet("Marcadores")
+    ws2.sheet_view.showGridLines = False
+    meta2 = f"{q.nombre}   |   {liga.nombre if liga else ''}   |   {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    _xl_header_band(ws2, "Marcadores de Partidos", meta2, 6)
+    ws2.row_dimensions[3].height = 8
+    _xl_table_header(ws2, 4, ['#', 'Equipo Local', 'Resultado', 'Equipo Visitante', 'Fecha', 'Estado'],
+                     bg=_C['green_dark'])
+
+    for i, p in enumerate(partidos, 1):
+        el = Equipo.query.get(p.local)
+        ev = Equipo.query.get(p.visitante)
+        if p.cancelado:
+            score, status = 'Cancelado', 'Cancelado'
+        elif p.ptos_local is not None:
+            score  = f"{p.ptos_local}  -  {p.ptos_visitante}"
+            status = 'Finalizado'
+        else:
+            score, status = '-', 'Pendiente'
+        rn = 4 + i
+        _xl_data_row(ws2, rn,
+                     [i, el.nombre if el else '?', score, ev.nombre if ev else '?',
+                      p.inicio.strftime('%d/%m/%Y  %H:%M'), status],
+                     alt=(i % 2 == 0))
+        sc = ws2.cell(row=rn, column=3)
+        sc.alignment = _xl_align('center', 'center')
+        if p.ptos_local is not None and not p.cancelado:
+            sc.fill = _xl_fill(_C['green_light'])
+            sc.font = _xl_font(bold=True, size=9, color=_C['green_dark'])
+        st = ws2.cell(row=rn, column=6)
+        st.alignment = _xl_align('center', 'center')
+        if status == 'Finalizado':
+            st.fill = _xl_fill(_C['green_light'])
+            st.font = _xl_font(bold=True, size=8, color=_C['green_dark'])
+        elif status == 'Pendiente':
+            st.fill = _xl_fill(_C['orange_light'])
+            st.font = _xl_font(bold=True, size=8, color=_C['orange'])
+        elif status == 'Cancelado':
+            st.fill = _xl_fill(_C['red_light'])
+            st.font = _xl_font(bold=True, size=8, color=_C['red'])
+
+    ws2.freeze_panes = 'A5'
+    _xl_col_widths(ws2, [4, 24, 14, 24, 18, 13])
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    fname = q.nombre.replace(' ', '_').replace('—', '-')
+    return Response(buf.getvalue(),
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': f'attachment; filename="{fname}_reporte.xlsx"'})
+
+
+# ─── EXCEL: Pagos ─────────────────────────────────────────────────────────────
 
 @admin_bp.route('/reportes/<id_quiniela>/pagos/csv', methods=['GET'])
 @admin_required
 def reporte_pagos_csv(id_quiniela):
-    q = Quiniela.query.get_or_404(id_quiniela)
+    import openpyxl
+    q    = Quiniela.query.get_or_404(id_quiniela)
+    liga = Liga.query.get(q.id_liga)
     pagos = Pago.query.filter_by(id_quiniela=id_quiniela).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(['Jugador', 'Correo', 'Monto', 'Metodo', 'Estado', 'Nota', 'Fecha Pago', 'Fecha Confirmacion'])
+    confirmados     = sum(1 for p in pagos if p.estado == 'confirmado')
+    total_recaudado = sum(p.monto for p in pagos if p.estado == 'confirmado')
 
-    for pg in pagos:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Pagos"
+    ws.sheet_view.showGridLines = False
+
+    meta = (f"{liga.nombre if liga else ''}   |   {confirmados}/{len(pagos)} confirmados   |   "
+            f"Recaudado: ${float(total_recaudado):,.0f}   |   "
+            f"Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    _xl_header_band(ws, f"Reporte de Pagos  —  {q.nombre}", meta, 8)
+    ws.row_dimensions[3].height = 8
+    _xl_table_header(ws, 4, ['#', 'Jugador', 'Correo', 'Monto', 'Metodo', 'Estado', 'Fecha Pago', 'Confirmado'])
+
+    for idx, pg in enumerate(pagos, 1):
         usr = Usuario.query.get(pg.id_usr)
-        writer.writerow([
-            usr.nombre_completo if usr else '',
-            usr.correo if usr else '',
+        rn  = 4 + idx
+        _xl_data_row(ws, rn, [
+            idx,
+            usr.nombre_completo if usr else '—',
+            usr.correo if usr else '—',
             float(pg.monto),
-            pg.metodo,
-            pg.estado,
-            pg.nota or '',
-            pg.fecha_pago.strftime('%Y-%m-%d %H:%M') if pg.fecha_pago else '',
-            pg.fecha_confirmacion.strftime('%Y-%m-%d %H:%M') if pg.fecha_confirmacion else '',
-        ])
+            pg.metodo or '—',
+            '',
+            pg.fecha_pago.strftime('%d/%m/%Y  %H:%M') if pg.fecha_pago else '—',
+            pg.fecha_confirmacion.strftime('%d/%m/%Y  %H:%M') if pg.fecha_confirmacion else '—',
+        ], alt=(idx % 2 == 0))
+        ws.cell(row=rn, column=1).alignment = _xl_align('center', 'center')
+        mc = ws.cell(row=rn, column=4)
+        mc.number_format = '"$"#,##0.00'
+        mc.alignment     = _xl_align('right', 'center')
+        mc.font          = _xl_font(bold=True, size=9)
+        _xl_status_cell(ws.cell(row=rn, column=6), pg.estado)
 
-    output.seek(0)
-    nombre_archivo = q.nombre.replace(' ', '_').replace('—', '-')
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={
-            'Content-Disposition': f'attachment; filename="{nombre_archivo}_pagos.csv"'
-        }
-    )
+    ws.freeze_panes = 'A5'
+    _xl_col_widths(ws, [4, 26, 32, 12, 14, 14, 22, 22])
 
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    fname = q.nombre.replace(' ', '_').replace('—', '-')
+    return Response(buf.getvalue(),
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': f'attachment; filename="{fname}_pagos.xlsx"'})
+
+
+# ─── EXCEL: Posiciones ────────────────────────────────────────────────────────
 
 @admin_bp.route('/reportes/<id_quiniela>/posiciones/csv', methods=['GET'])
 @admin_required
 def reporte_posiciones_csv(id_quiniela):
-    q = Quiniela.query.get_or_404(id_quiniela)
+    import openpyxl
+    q             = Quiniela.query.get_or_404(id_quiniela)
+    liga          = Liga.query.get(q.id_liga)
     participantes = UsuarioQuiniela.query.filter_by(id_quiniela=id_quiniela).order_by(
-        UsuarioQuiniela.puntos_total.desc()
-    ).all()
+        UsuarioQuiniela.puntos_total.desc()).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(['Posicion', 'Jugador', 'Correo', 'Puntos', 'Estado Pago'])
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Posiciones"
+    ws.sheet_view.showGridLines = False
 
-    for idx, uq in enumerate(participantes, start=1):
-        usr = Usuario.query.get(uq.id_usr)
+    meta = (f"{liga.nombre if liga else ''}   |   Pozo: ${float(q.pozo_acumulado):,.0f}   |   "
+            f"Estado: {q.estado.capitalize()}   |   "
+            f"Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    _xl_header_band(ws, f"Tabla de Posiciones  —  {q.nombre}", meta, 5)
+    ws.row_dimensions[3].height = 8
+    _xl_table_header(ws, 4, ['Pos.', 'Jugador', 'Correo', 'Puntos', 'Estado Pago'], bg=_C['green_dark'])
+
+    for idx, uq in enumerate(participantes, 1):
+        usr  = Usuario.query.get(uq.id_usr)
+        if not usr: continue
         pago = Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela).first()
-        writer.writerow([
-            idx,
-            usr.nombre_completo if usr else '',
-            usr.correo if usr else '',
-            uq.puntos_total,
-            pago.estado if pago else 'sin_pago',
-        ])
+        estado = pago.estado if pago else 'sin_pago'
+        rn = 4 + idx
+        _xl_rank_row(ws, rn, [idx, usr.nombre_completo, usr.correo, uq.puntos_total, ''], pos=idx)
+        _xl_status_cell(ws.cell(row=rn, column=5), estado)
+        ws.cell(row=rn, column=1).alignment = _xl_align('center', 'center')
+        ws.cell(row=rn, column=4).alignment = _xl_align('center', 'center')
+        ws.cell(row=rn, column=4).font      = _xl_font(bold=True, size=10)
 
-    output.seek(0)
-    nombre_archivo = q.nombre.replace(' ', '_').replace('—', '-')
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={
-            'Content-Disposition': f'attachment; filename="{nombre_archivo}_posiciones.csv"'
-        }
-    )
+    ws.freeze_panes = 'A5'
+    _xl_col_widths(ws, [6, 28, 34, 9, 16])
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    fname = q.nombre.replace(' ', '_').replace('—', '-')
+    return Response(buf.getvalue(),
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': f'attachment; filename="{fname}_posiciones.xlsx"'})
 
 
-# ─── REPORTES PDF ─────────────────────────────────────────────────────────────
+# ─── PDF HELPERS ──────────────────────────────────────────────────────────────
+
+def _draw_page(canvas, doc, title, subtitle):
+    """Header y footer en cada página del PDF."""
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    w, h = doc.pagesize
+    # Banda oscura superior
+    canvas.setFillColor(colors.HexColor(_C['dark']))
+    canvas.rect(0, h - 2.0*cm, w, 2.0*cm, fill=1, stroke=0)
+    # Línea acento verde
+    canvas.setFillColor(colors.HexColor(_C['green']))
+    canvas.rect(0, h - 2.15*cm, w, 0.15*cm, fill=1, stroke=0)
+    # Barra lateral izquierda verde
+    canvas.setFillColor(colors.HexColor(_C['green']))
+    canvas.rect(0, h - 2.0*cm, 0.35*cm, 2.0*cm, fill=1, stroke=0)
+    # Título
+    canvas.setFillColor(colors.white)
+    canvas.setFont('Helvetica-Bold', 12)
+    canvas.drawString(0.7*cm, h - 1.35*cm, title)
+    # Subtítulo
+    canvas.setFont('Helvetica', 7.5)
+    canvas.setFillColor(colors.HexColor('#aaaaaa'))
+    canvas.drawString(0.7*cm, h - 1.80*cm, subtitle)
+    # Footer
+    canvas.setFillColor(colors.HexColor(_C['border']))
+    canvas.rect(0, 0.6*cm, w, 0.04*cm, fill=1, stroke=0)
+    canvas.setFont('Helvetica', 6.5)
+    canvas.setFillColor(colors.HexColor(_C['gray']))
+    canvas.drawString(0.7*cm, 0.3*cm, 'MABQUI Quinielas')
+    canvas.drawRightString(w - 0.7*cm, 0.3*cm,
+                           f"Generado el {datetime.datetime.now().strftime('%d/%m/%Y a las %H:%M')}")
+
 
 def _pdf_styles():
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT
     from reportlab.lib import colors
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle('Title2',   parent=styles['Heading1'], fontSize=16, spaceAfter=4, textColor=colors.HexColor('#1a1a1a')))
-    styles.add(ParagraphStyle('Sub',      parent=styles['Normal'],   fontSize=9,  spaceAfter=12, textColor=colors.HexColor('#6b6b6b')))
-    styles.add(ParagraphStyle('Label',    parent=styles['Normal'],   fontSize=8,  fontName='Helvetica-Bold', textColor=colors.HexColor('#6b6b6b')))
-    styles.add(ParagraphStyle('Cell',     parent=styles['Normal'],   fontSize=8,  textColor=colors.HexColor('#1a1a1a')))
+    styles.add(ParagraphStyle('Seccion', parent=styles['Normal'],
+        fontSize=8, fontName='Helvetica-Bold', spaceBefore=12, spaceAfter=3,
+        textColor=colors.HexColor(_C['gray']),
+        letterSpacing=0.8,
+    ))
     return styles
 
 
-def _make_pdf_table(data, col_widths, header_color=None):
+def _pdf_info_strip(content_w, kv_pairs):
+    """Tira horizontal con pares clave-valor (etiqueta gris + valor negro)."""
     from reportlab.platypus import Table as RLTable, TableStyle
     from reportlab.lib import colors
-    tbl = RLTable(data, colWidths=col_widths)
-    hc = colors.HexColor(header_color or '#1a1a1a')
-    style = TableStyle([
-        ('BACKGROUND',  (0,0), (-1,0), hc),
-        ('TEXTCOLOR',   (0,0), (-1,0), colors.white),
-        ('FONTNAME',    (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE',    (0,0), (-1,-1), 8),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#fafaf8')]),
-        ('GRID',        (0,0), (-1,-1), 0.4, colors.HexColor('#e4e4e0')),
-        ('VALIGN',      (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING',  (0,0), (-1,-1), 5),
+    n = len(kv_pairs)
+    cw = content_w / n
+    labels = [k for k, _ in kv_pairs]
+    values = [v for _, v in kv_pairs]
+    tbl = RLTable([labels, values], colWidths=[cw]*n, rowHeights=[11, 18])
+    tbl.setStyle(TableStyle([
+        ('BACKGROUND',   (0,0), (-1,-1), colors.HexColor(_C['bg2'])),
+        ('TOPPADDING',   (0,0), (-1,-1), 5),
         ('BOTTOMPADDING',(0,0), (-1,-1), 5),
-        ('LEFTPADDING', (0,0), (-1,-1), 6),
-        ('RIGHTPADDING',(0,0), (-1,-1), 6),
-    ])
-    tbl.setStyle(style)
+        ('LEFTPADDING',  (0,0), (-1,-1), 8),
+        ('RIGHTPADDING', (0,0), (-1,-1), 8),
+        ('FONTNAME',     (0,0), (-1,0),  'Helvetica'),
+        ('FONTSIZE',     (0,0), (-1,0),  6.5),
+        ('TEXTCOLOR',    (0,0), (-1,0),  colors.HexColor(_C['gray'])),
+        ('FONTNAME',     (0,1), (-1,1),  'Helvetica-Bold'),
+        ('FONTSIZE',     (0,1), (-1,1),  11),
+        ('TEXTCOLOR',    (0,1), (-1,1),  colors.HexColor(_C['dark'])),
+        ('ALIGN',        (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN',       (0,0), (-1,-1), 'MIDDLE'),
+        ('LINEAFTER',    (0,0), (-2,-1), 0.5, colors.HexColor(_C['border'])),
+        ('BOX',          (0,0), (-1,-1), 0.5, colors.HexColor(_C['border'])),
+    ]))
     return tbl
 
+
+def _pdf_table(data, col_widths, hdr_bg=None, status_col=None, rank_rows=False):
+    """Tabla limpia: header de color, filas alternas, coloreado de estado."""
+    from reportlab.platypus import Table as RLTable, TableStyle
+    from reportlab.lib import colors
+
+    hc    = colors.HexColor(hdr_bg or _C['dark'])
+    white = colors.white
+    alt   = colors.HexColor(_C['bg'])
+    brd   = colors.HexColor(_C['border'])
+
+    cmds = [
+        # Header
+        ('BACKGROUND',    (0,0), (-1,0),  hc),
+        ('TEXTCOLOR',     (0,0), (-1,0),  white),
+        ('FONTNAME',      (0,0), (-1,0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0,0), (-1,0),  7.5),
+        ('ALIGN',         (0,0), (-1,0),  'CENTER'),
+        ('VALIGN',        (0,0), (-1,0),  'MIDDLE'),
+        ('TOPPADDING',    (0,0), (-1,0),  5),
+        ('BOTTOMPADDING', (0,0), (-1,0),  5),
+        # Datos
+        ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE',      (0,1), (-1,-1), 8),
+        ('TOPPADDING',    (0,1), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 4),
+        ('LEFTPADDING',   (0,0), (-1,-1), 6),
+        ('RIGHTPADDING',  (0,0), (-1,-1), 6),
+        ('VALIGN',        (0,1), (-1,-1), 'MIDDLE'),
+        ('ROWBACKGROUNDS',(0,1), (-1,-1), [white, alt]),
+        ('LINEBELOW',     (0,0), (-1,-1), 0.3, brd),
+    ]
+
+    # Top 3 con color
+    if rank_rows:
+        rank_colors = [
+            (1, colors.HexColor(_C['gold_light']),   colors.HexColor(_C['gold'])),
+            (2, colors.HexColor(_C['silver_light']), colors.HexColor(_C['silver'])),
+            (3, colors.HexColor(_C['bronze_light']), colors.HexColor(_C['bronze'])),
+        ]
+        for pos, bg, fg in rank_colors:
+            if pos < len(data):
+                cmds += [
+                    ('BACKGROUND', (0, pos), (-1, pos), bg),
+                    ('FONTNAME',   (0, pos), (-1, pos), 'Helvetica-Bold'),
+                    ('TEXTCOLOR',  (0, pos), (0, pos),  fg),
+                ]
+
+    # Columna de estado con colores de badge
+    if status_col:
+        ci = status_col - 1
+        for ri, row in enumerate(data[1:], 1):
+            if ci < len(row):
+                val = str(row[ci]).lower()
+                if val == 'confirmado':
+                    cmds += [('BACKGROUND', (ci, ri), (ci, ri), colors.HexColor(_C['green_light'])),
+                              ('TEXTCOLOR',  (ci, ri), (ci, ri), colors.HexColor(_C['green_dark'])),
+                              ('FONTNAME',   (ci, ri), (ci, ri), 'Helvetica-Bold')]
+                elif val == 'pendiente':
+                    cmds += [('BACKGROUND', (ci, ri), (ci, ri), colors.HexColor(_C['orange_light'])),
+                              ('TEXTCOLOR',  (ci, ri), (ci, ri), colors.HexColor(_C['orange'])),
+                              ('FONTNAME',   (ci, ri), (ci, ri), 'Helvetica-Bold')]
+                elif val == 'rechazado':
+                    cmds += [('BACKGROUND', (ci, ri), (ci, ri), colors.HexColor(_C['red_light'])),
+                              ('TEXTCOLOR',  (ci, ri), (ci, ri), colors.HexColor(_C['red'])),
+                              ('FONTNAME',   (ci, ri), (ci, ri), 'Helvetica-Bold')]
+
+    tbl = RLTable(data, colWidths=col_widths, repeatRows=1)
+    tbl.setStyle(TableStyle(cmds))
+    return tbl
+
+
+# ─── PDF: Reporte general ─────────────────────────────────────────────────────
 
 @admin_bp.route('/reportes/<id_quiniela>/pdf', methods=['GET'])
 @admin_required
 def reporte_pdf(id_quiniela):
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import cm
     from reportlab.lib import colors
+    import functools
 
-    q = Quiniela.query.get_or_404(id_quiniela)
-    liga = Liga.query.get(q.id_liga)
-    partidos = Partido.query.filter_by(id_quiniela=id_quiniela).order_by(Partido.inicio.asc()).all()
+    q             = Quiniela.query.get_or_404(id_quiniela)
+    liga          = Liga.query.get(q.id_liga)
+    partidos      = Partido.query.filter_by(id_quiniela=id_quiniela).order_by(Partido.inicio.asc()).all()
     participantes = UsuarioQuiniela.query.filter_by(id_quiniela=id_quiniela).order_by(
-        UsuarioQuiniela.puntos_total.desc()
-    ).all()
+        UsuarioQuiniela.puntos_total.desc()).all()
+
+    PAGE    = landscape(A4)
+    MARGIN  = 1.6*cm
+    TOP_MAR = 2.6*cm
+    BOT_MAR = 1.2*cm
+    cw      = PAGE[0] - 2*MARGIN   # ancho útil
+
+    title_str = q.nombre
+    sub_str   = (f"{liga.nombre if liga else 'Liga MX'}   |   "
+                 f"Estado: {q.estado.capitalize()}   |   "
+                 f"Pozo: ${float(q.pozo_acumulado):,.0f}")
 
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=landscape(A4),
-                            leftMargin=1.5*cm, rightMargin=1.5*cm,
-                            topMargin=1.5*cm, bottomMargin=1.5*cm)
+    doc = SimpleDocTemplate(buf, pagesize=PAGE,
+                            leftMargin=MARGIN, rightMargin=MARGIN,
+                            topMargin=TOP_MAR, bottomMargin=BOT_MAR)
+    fn  = functools.partial(_draw_page, title=title_str, subtitle=sub_str)
     styles = _pdf_styles()
-    story = []
+    story  = []
 
-    # Header
-    story.append(Paragraph(q.nombre, styles['Title2']))
-    story.append(Paragraph(
-        f"{liga.nombre if liga else ''} · Estado: {q.estado} · "
-        f"Pozo: ${float(q.pozo_acumulado):,.0f} · "
-        f"Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}",
-        styles['Sub']
-    ))
-
-    # Tabla de predicciones
-    headers = ['#', 'Jugador', 'Pts', 'Pago']
-    for i, p in enumerate(partidos, 1):
-        eq_l = Equipo.query.get(p.local)
-        eq_v = Equipo.query.get(p.visitante)
-        headers.append(f'P{i}\n{(eq_l.nombre[:6] if eq_l else "?")} v {(eq_v.nombre[:6] if eq_v else "?")}')
-
-    rows = [headers]
-    for idx, uq in enumerate(participantes, 1):
-        usr = Usuario.query.get(uq.id_usr)
-        if not usr:
-            continue
-        pago = Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela).first()
-        estado_pago = pago.estado if pago else 'sin pago'
-        row = [str(idx), usr.nombre_completo[:22], str(uq.puntos_total), estado_pago]
-        for p in partidos:
-            pred = Prediccion.query.filter_by(id_usr=uq.id_usr, id_partido=p.id_partido).first()
-            row.append('/'.join(pred.selecciones) if pred else '-')
-        rows.append(row)
-
-    # Anchos de columna dinámicos
-    n_partidos = len(partidos)
-    fixed_w = 1*cm + 4.5*cm + 1.2*cm + 1.8*cm
-    avail = landscape(A4)[0] - 3*cm - fixed_w
-    pw = min(avail / max(n_partidos, 1), 2.2*cm)
-    col_widths = [1*cm, 4.5*cm, 1.2*cm, 1.8*cm] + [pw] * n_partidos
-
-    story.append(_make_pdf_table(rows, col_widths))
+    # Tira de info
+    confirmados = sum(1 for uq in participantes
+                      if Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela, estado='confirmado').first())
+    story.append(Spacer(1, 0.25*cm))
+    story.append(_pdf_info_strip(cw, [
+        ('JUGADORES',    str(len(participantes))),
+        ('PARTIDOS',     str(len(partidos))),
+        ('POZO TOTAL',   f"${float(q.pozo_acumulado):,.0f}"),
+        ('CONFIRMADOS',  str(confirmados)),
+        ('ESTADO',       q.estado.capitalize()),
+        ('CIERRE',       q.cierre.strftime('%d/%m/%Y %H:%M') if q.cierre else '—'),
+    ]))
     story.append(Spacer(1, 0.4*cm))
 
-    # Tabla marcadores
-    story.append(Paragraph("Marcadores", styles['Label']))
-    story.append(Spacer(1, 0.15*cm))
-    mrows = [['#', 'Local', 'Marcador', 'Visitante', 'Fecha']]
+    # Sección predicciones
+    story.append(Paragraph("PREDICCIONES POR JUGADOR", styles['SeccionTitle'] if 'SeccionTitle' in styles else styles['SeccionTitle'] if False else styles['Seccion']))
+    story.append(HRFlowable(width=cw, thickness=1.5, color=colors.HexColor(_C['green']), spaceAfter=5))
+
+    # Calcular anchos: columnas fijas + columnas de partido iguales
+    n_p      = len(partidos)
+    fixed_w  = 0.7*cm + 4.2*cm + 1.0*cm + 1.6*cm   # #, jugador, pts, pago
+    part_avail = cw - fixed_w
+    pw       = min(part_avail / max(n_p, 1), 1.8*cm)
+
+    hdr_p = ['#', 'Jugador', 'Pts', 'Pago']
     for i, p in enumerate(partidos, 1):
-        eq_l = Equipo.query.get(p.local)
-        eq_v = Equipo.query.get(p.visitante)
-        score = f"{p.ptos_local}-{p.ptos_visitante}" if p.ptos_local is not None else "- vs -"
-        estado = "Cancelado" if p.cancelado else score
-        mrows.append([
-            str(i),
-            eq_l.nombre if eq_l else '?',
-            estado,
-            eq_v.nombre if eq_v else '?',
-            p.inicio.strftime('%d/%m %H:%M'),
-        ])
-    story.append(_make_pdf_table(mrows, [1*cm, 4*cm, 2.5*cm, 4*cm, 2.5*cm], '#3dbb78'))
+        el = Equipo.query.get(p.local)
+        ev = Equipo.query.get(p.visitante)
+        hdr_p.append(f'P{i}')   # número del partido; leyenda abajo
 
-    doc.build(story)
+    rows_p = [hdr_p]
+    for idx, uq in enumerate(participantes, 1):
+        usr  = Usuario.query.get(uq.id_usr)
+        if not usr: continue
+        pago = Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela).first()
+        row  = [str(idx), usr.nombre_completo[:26], str(uq.puntos_total),
+                pago.estado if pago else 'sin pago']
+        for p in partidos:
+            pr = Prediccion.query.filter_by(id_usr=uq.id_usr, id_partido=p.id_partido).first()
+            row.append('/'.join(pr.selecciones) if pr else '-')
+        rows_p.append(row)
+
+    story.append(_pdf_table(rows_p,
+                             [0.7*cm, 4.2*cm, 1.0*cm, 1.6*cm] + [pw]*n_p,
+                             status_col=4, rank_rows=True))
+    story.append(Spacer(1, 0.5*cm))
+
+    # Leyenda de partidos
+    story.append(Paragraph("PARTIDOS  (L = Local gana  |  E = Empate  |  V = Visitante gana)", styles['Seccion']))
+    story.append(HRFlowable(width=cw, thickness=1.5, color=colors.HexColor(_C['green']), spaceAfter=5))
+
+    leg_rows = [['No.', 'Local', 'Visitante', 'Fecha', 'Resultado']]
+    for i, p in enumerate(partidos, 1):
+        el = Equipo.query.get(p.local)
+        ev = Equipo.query.get(p.visitante)
+        if p.cancelado:
+            res = 'Cancelado'
+        elif p.ptos_local is not None:
+            res = f"{p.ptos_local} - {p.ptos_visitante}"
+        else:
+            res = 'Pendiente'
+        leg_rows.append([f'P{i}', el.nombre if el else '?', ev.nombre if ev else '?',
+                          p.inicio.strftime('%d/%m  %H:%M'), res])
+
+    story.append(_pdf_table(leg_rows,
+                             [0.8*cm, 5.0*cm, 5.0*cm, 2.2*cm, 2.4*cm],
+                             hdr_bg=_C['green_dark']))
+
+    doc.build(story, onFirstPage=fn, onLaterPages=fn)
     buf.seek(0)
-    nombre_archivo = q.nombre.replace(' ', '_').replace('—', '-')
-    return Response(
-        buf.getvalue(),
-        mimetype='application/pdf',
-        headers={'Content-Disposition': f'attachment; filename="{nombre_archivo}_reporte.pdf"'}
-    )
+    fname = q.nombre.replace(' ', '_').replace('—', '-')
+    return Response(buf.getvalue(), mimetype='application/pdf',
+                    headers={'Content-Disposition': f'attachment; filename="{fname}_reporte.pdf"'})
 
+
+# ─── PDF: Posiciones ──────────────────────────────────────────────────────────
 
 @admin_bp.route('/reportes/<id_quiniela>/posiciones/pdf', methods=['GET'])
 @admin_required
 def reporte_posiciones_pdf(id_quiniela):
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    import functools
 
-    q = Quiniela.query.get_or_404(id_quiniela)
-    liga = Liga.query.get(q.id_liga)
+    q             = Quiniela.query.get_or_404(id_quiniela)
+    liga          = Liga.query.get(q.id_liga)
     participantes = UsuarioQuiniela.query.filter_by(id_quiniela=id_quiniela).order_by(
-        UsuarioQuiniela.puntos_total.desc()
-    ).all()
+        UsuarioQuiniela.puntos_total.desc()).all()
+
+    PAGE    = A4
+    MARGIN  = 1.8*cm
+    cw      = PAGE[0] - 2*MARGIN
+
+    lider     = participantes[0] if participantes else None
+    lider_usr = Usuario.query.get(lider.id_usr) if lider else None
+
+    title_str = f"Tabla de Posiciones  —  {q.nombre}"
+    sub_str   = (f"{liga.nombre if liga else 'Liga MX'}   |   "
+                 f"Pozo: ${float(q.pozo_acumulado):,.0f}   |   "
+                 f"Estado: {q.estado.capitalize()}")
 
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4,
-                            leftMargin=2*cm, rightMargin=2*cm,
-                            topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(buf, pagesize=PAGE,
+                            leftMargin=MARGIN, rightMargin=MARGIN,
+                            topMargin=2.6*cm, bottomMargin=1.2*cm)
+    fn  = functools.partial(_draw_page, title=title_str, subtitle=sub_str)
     styles = _pdf_styles()
-    story = []
+    story  = []
 
-    story.append(Paragraph(f"Tabla de Posiciones — {q.nombre}", styles['Title2']))
-    story.append(Paragraph(
-        f"{liga.nombre if liga else ''} · Pozo: ${float(q.pozo_acumulado):,.0f} · "
-        f"Estado: {q.estado} · {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}",
-        styles['Sub']
-    ))
+    story.append(Spacer(1, 0.25*cm))
+    story.append(_pdf_info_strip(cw, [
+        ('JUGADORES',    str(len(participantes))),
+        ('POZO',         f"${float(q.pozo_acumulado):,.0f}"),
+        ('LIDER',        lider_usr.nombre_completo.split()[0] if lider_usr else '—'),
+        ('PUNTOS LIDER', str(lider.puntos_total) if lider else '—'),
+        ('ESTADO',       q.estado.capitalize()),
+    ]))
+    story.append(Spacer(1, 0.4*cm))
 
-    rows = [['Pos', 'Jugador', 'Correo', 'Puntos', 'Estado Pago']]
+    story.append(Paragraph("CLASIFICACION GENERAL", styles['Seccion']))
+    story.append(HRFlowable(width=cw, thickness=1.5, color=colors.HexColor(_C['green']), spaceAfter=5))
+
+    rows = [['Pos.', 'Jugador', 'Correo', 'Puntos', 'Estado Pago']]
     for idx, uq in enumerate(participantes, 1):
-        usr = Usuario.query.get(uq.id_usr)
-        if not usr:
-            continue
+        usr  = Usuario.query.get(uq.id_usr)
+        if not usr: continue
         pago = Pago.query.filter_by(id_usr=uq.id_usr, id_quiniela=id_quiniela).first()
         rows.append([
-            str(idx),
+            f'{idx}.',
             usr.nombre_completo,
             usr.correo,
             str(uq.puntos_total),
             pago.estado if pago else 'sin pago',
         ])
 
-    story.append(_make_pdf_table(rows, [1.2*cm, 5*cm, 6*cm, 1.8*cm, 2.5*cm]))
-    doc.build(story)
+    story.append(_pdf_table(rows,
+                             [1.2*cm, 5.0*cm, 5.8*cm, 1.5*cm, 2.5*cm],
+                             hdr_bg=_C['green_dark'],
+                             rank_rows=True,
+                             status_col=5))
+
+    doc.build(story, onFirstPage=fn, onLaterPages=fn)
     buf.seek(0)
-    nombre_archivo = q.nombre.replace(' ', '_').replace('—', '-')
-    return Response(
-        buf.getvalue(),
-        mimetype='application/pdf',
-        headers={'Content-Disposition': f'attachment; filename="{nombre_archivo}_posiciones.pdf"'}
-    )
+    fname = q.nombre.replace(' ', '_').replace('—', '-')
+    return Response(buf.getvalue(), mimetype='application/pdf',
+                    headers={'Content-Disposition': f'attachment; filename="{fname}_posiciones.pdf"'})

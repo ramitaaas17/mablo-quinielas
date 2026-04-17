@@ -69,7 +69,7 @@ export default function LoginPage() {
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 pointer-events-none">
           <div
             className="w-[1400px] h-[420px] rounded-b-[455px] animate-breathe"
-            style={{ backgroundImage: "linear-gradient(145deg, rgb(252,228,236) 0%, rgb(253,232,216) 40%, rgb(214,245,232) 100%)" }}
+            style={{ backgroundImage: "var(--hero-blob-img)" }}
           />
         </div>
 
@@ -96,7 +96,7 @@ export default function LoginPage() {
         <img
           src={HERO_BG}
           alt=""
-          fetchpriority="high"
+          fetchPriority="high"
           decoding="async"
           className="absolute inset-0 w-full h-full object-cover opacity-90 pointer-events-none"
           style={{ top: 59 }}
@@ -123,7 +123,7 @@ export default function LoginPage() {
           className="relative z-10 mx-auto mt-8 w-full max-w-[380px] px-4 sm:px-0 animate-fade-in-up"
           style={{ animationDelay: "0.15s", animationDuration: "0.55s" }}
         >
-          <div className="bg-white/60 backdrop-blur-sm border border-[#e4e4e0] rounded-[20px] shadow-[0_2px_24px_rgba(0,0,0,0.06)] p-6 sm:p-8 flex flex-col gap-5">
+          <div className="bg-white/60 backdrop-blur-sm border border-[#e4e4e0] rounded-[20px] shadow-[0_2px_24px_rgba(0,0,0,0.08)] p-6 sm:p-8 flex flex-col gap-5">
             <InputField
               label="Correo electrónico"
               placeholder="hola@ejemplo.com"
@@ -156,9 +156,9 @@ export default function LoginPage() {
 
             {/* Divider */}
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#ebebeb]" />
-              <span className="text-[12px] text-[#ccc]" style={{ fontFamily: "Nunito, sans-serif" }}>o</span>
-              <div className="flex-1 h-px bg-[#ebebeb]" />
+              <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
+              <span className="text-[12px]" style={{ fontFamily: "Nunito, sans-serif", color: "var(--text-3)" }}>o</span>
+              <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
             </div>
 
             <div className="text-center flex flex-col gap-2">

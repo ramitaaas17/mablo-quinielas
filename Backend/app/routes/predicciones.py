@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models import Prediccion, Partido, Quiniela, UsuarioQuiniela
-from ..extensions import db
+from ..extensions import db, limiter
 
 predicciones_bp = Blueprint('predicciones', __name__)
 
@@ -11,6 +11,7 @@ SELECCIONES_VALIDAS = {'L', 'E', 'V'}
 
 @predicciones_bp.route('/', methods=['POST'])
 @jwt_required()
+@limiter.limit("30 per minute")
 def crear_prediccion():
     id_usr = get_jwt_identity()
     data = request.get_json(silent=True) or {}
@@ -33,7 +34,7 @@ def crear_prediccion():
     if quiniela.estado != 'abierta':
         return jsonify({"error": "La quiniela ya no acepta predicciones"}), 400
 
-    if datetime.datetime.utcnow() > quiniela.cierre:
+    if datetime.datetime.now() > quiniela.cierre:
         return jsonify({"error": "El plazo para predecir ha cerrado"}), 400
 
     inscrito = UsuarioQuiniela.query.filter_by(
@@ -67,7 +68,7 @@ def crear_prediccion():
     existente = Prediccion.query.filter_by(id_usr=id_usr, id_partido=id_partido).first()
     if existente:
         existente.selecciones = selecciones
-        existente.fecha = datetime.datetime.utcnow()
+        existente.fecha = datetime.datetime.now()
         db.session.commit()
         return jsonify({"mensaje": "Predicción actualizada", "id": str(existente.id_pred)}), 200
 
@@ -87,6 +88,7 @@ def crear_prediccion():
 
 @predicciones_bp.route('/bulk', methods=['POST'])
 @jwt_required()
+@limiter.limit("10 per minute")
 def crear_predicciones_bulk():
     """Guarda múltiples predicciones en una sola llamada."""
     id_usr = get_jwt_identity()
@@ -117,7 +119,7 @@ def crear_predicciones_bulk():
             errores.append({"id_partido": id_partido, "error": "Quiniela no acepta predicciones"})
             continue
 
-        if datetime.datetime.utcnow() > quiniela.cierre:
+        if datetime.datetime.now() > quiniela.cierre:
             errores.append({"id_partido": id_partido, "error": "Plazo cerrado"})
             continue
 
@@ -141,7 +143,7 @@ def crear_predicciones_bulk():
             existente = Prediccion.query.filter_by(id_usr=id_usr, id_partido=id_partido).first()
             if existente:
                 existente.selecciones = selecciones
-                existente.fecha = datetime.datetime.utcnow()
+                existente.fecha = datetime.datetime.now()
                 resultados.append({"id_partido": id_partido, "accion": "actualizada"})
             else:
                 pred = Prediccion(

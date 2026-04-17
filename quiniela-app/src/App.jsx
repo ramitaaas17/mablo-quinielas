@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useStore } from "./store";
 
@@ -16,7 +16,7 @@ const InvitacionPage  = lazy(() => import("./pages/InvitacionPage.jsx"));
 
 // Fallback mínimo — sin flash raro, solo fondo del color de la app
 function PageLoader() {
-  return <div className="min-h-screen bg-[#fafaf8]" />;
+  return <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }} />;
 }
 
 function ProtectedRoute({ children }) {
@@ -33,7 +33,16 @@ function AdminRoute({ children }) {
 }
 
 export default function App() {
-  const { user } = useStore();
+  const { user, theme } = useStore();
+
+  // Keep data-theme in sync with store (handles SSR / initial hydration edge cases)
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }, [theme]);
 
   return (
     <BrowserRouter>

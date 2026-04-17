@@ -1,10 +1,18 @@
 import re
+import os
+import uuid
+import base64
 import datetime
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from ..models import Usuario, UsuarioQuiniela, Quiniela, Equipo
 from ..extensions import db, limiter
+
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'uploads')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+ALLOWED_IMG_TYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
+MAX_FOTO_BYTES = 15 * 1024 * 1024  # 15 MB (el cliente ya comprime, esto es el techo de seguridad)
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -27,6 +35,7 @@ def _usuario_to_dict(user):
         "equipo_favorito": str(user.equipo_favorito) if user.equipo_favorito else None,
         "equipo_favorito_nombre": equipo_nombre,
         "is_admin": user.is_admin,
+        "foto_perfil": user.foto_perfil or None,
     }
 
 
@@ -191,3 +200,67 @@ def stats():
         "total_jugadores": total_jugadores,
         "total_participaciones": len(participaciones),
     }), 200
+
+
+@auth_bp.route('/foto-perfil', methods=['PATCH'])
+@jwt_required()
+@limiter.limit("10 per minute")
+def actualizar_foto_perfil():
+    id_usr = get_jwt_identity()
+    user = Usuario.query.get(id_usr)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    data = request.get_json(silent=True) or {}
+    data_url = data.get('foto')
+
+    # Permitir borrar la foto
+    if data_url is None or data_url == "":
+        # Borrar archivo anterior si existe
+        if user.foto_perfil and user.foto_perfil.startswith('/uploads/'):
+            old_path = os.path.join(UPLOAD_DIR, os.path.basename(user.foto_perfil))
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        user.foto_perfil = None
+        db.session.commit()
+        return jsonify({"mensaje": "Foto eliminada"}), 200
+
+    if not isinstance(data_url, str) or not data_url.startswith('data:'):
+        return jsonify({"error": "Formato de imagen inválido"}), 400
+
+    try:
+        header, encoded = data_url.split(',', 1)
+        mime = header.split(';')[0].replace('data:', '')
+        if mime not in ALLOWED_IMG_TYPES:
+            return jsonify({"error": "Tipo de imagen no permitido"}), 400
+        raw = base64.b64decode(encoded)
+        if len(raw) > MAX_FOTO_BYTES:
+            return jsonify({"error": "La imagen supera el límite de 5 MB"}), 400
+
+        ext = 'jpg'
+        if 'png' in mime:
+            ext = 'png'
+        elif 'webp' in mime:
+            ext = 'webp'
+        elif 'gif' in mime:
+            ext = 'gif'
+
+        filename = f"foto_{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+
+        # Borrar foto anterior
+        if user.foto_perfil and user.foto_perfil.startswith('/uploads/'):
+            old_path = os.path.join(UPLOAD_DIR, os.path.basename(user.foto_perfil))
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        with open(filepath, 'wb') as f:
+            f.write(raw)
+
+        user.foto_perfil = f"/uploads/{filename}"
+        db.session.commit()
+        return jsonify({"mensaje": "Foto actualizada", "foto_perfil": user.foto_perfil}), 200
+
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Error al procesar la imagen"}), 500

@@ -102,20 +102,17 @@ export default function DashboardPage() {
       <Navbar variant="app" showWeek />
 
       {/* Hero Banner */}
-      <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden animate-fade-in">
+      <div className="relative border-b border-[#e4e4e0] overflow-hidden animate-fade-in bg-white">
         <img
           src={MASCOT_DASHBOARD}
           alt=""
-          fetchpriority="high"
+          fetchPriority="high"
           decoding="async"
           className="absolute inset-0 w-full h-full object-cover object-right sm:object-center pointer-events-none"
         />
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 30%, rgba(255,255,255,0) 55%)",
-          }}
+          style={{ backgroundImage: "var(--hero-fade-r)" }}
         />
 
         <div className="relative z-10 px-6 sm:px-10 lg:px-[90px] pt-8 lg:pt-14 pb-10 xl:pb-14">

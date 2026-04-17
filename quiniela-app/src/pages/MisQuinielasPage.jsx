@@ -64,11 +64,8 @@ export default function MisQuinielasPage() {
       {/* Hero */}
       <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden animate-fade-in">
         <div
-          className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[200%] sm:w-[1400px] h-[300px] sm:h-[280px] rounded-b-[40%] sm:rounded-b-[420px] opacity-50 pointer-events-none animate-breathe"
-          style={{
-            backgroundImage:
-              "linear-gradient(145deg, rgba(247,224,218,0.7) 0%, rgba(253,232,216,0.7) 40%, rgba(155,234,201,0.7) 100%)",
-          }}
+          className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[200%] sm:w-[1400px] h-[300px] sm:h-[280px] rounded-b-[40%] sm:rounded-b-[420px] pointer-events-none animate-breathe"
+          style={{ backgroundImage: "var(--hero-blob-img)", opacity: 0.5 }}
         />
         <div className="relative z-10 px-6 sm:px-10 lg:px-[90px] pt-8 lg:pt-[44px] pb-10">
           <h1

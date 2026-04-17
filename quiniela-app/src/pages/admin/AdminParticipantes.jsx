@@ -4,6 +4,7 @@ import {
   Badge, Modal, InputField, SelectField,
   IconPlus, IconSearch, IconTrash, IconWarning
 } from "../../components/admin/index.jsx";
+import { Avatar } from "../PerfilPage";
 import { adminService } from "../../services/quinielaService";
 import { quinielaService } from "../../services/quinielaService";
 
@@ -88,10 +89,10 @@ export default function AdminParticipantes({ onNavigate }) {
   );
 
   const avatarColors = [
-    { bg: "#d6f5e8", text: "#25854f" },
-    { bg: "#f2f2ef", text: "#1d4ed8" },
-    { bg: "#fde8d8", text: "#a05a00" },
-    { bg: "#fce8e8", text: "#7c3aed" },
+    { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+    { bg: "var(--surface-2)",   text: "var(--blue-text)" },
+    { bg: "var(--orange-pale)", text: "var(--orange-text)" },
+    { bg: "var(--red-pale)",    text: "var(--purple-text)" },
   ];
 
   return (
@@ -101,7 +102,7 @@ export default function AdminParticipantes({ onNavigate }) {
       {/* Stats banner */}
       <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-4 md:px-7 pt-7 pb-7 flex-shrink-0">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1400px] h-[260px] rounded-b-[415px] opacity-45 pointer-events-none"
-          style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }} />
+          style={{ backgroundImage: "linear-gradient(145deg, var(--surface-2) 0%, var(--orange-pale) 40%, var(--green-pale) 100%)" }} />
         <div className="relative z-10">
           <h1 className="text-[22px] font-black text-[#1a1a1a] tracking-[-0.6px]" style={{ fontFamily: font }}>Participantes</h1>
           <p className="text-[12px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>Gestiona los usuarios registrados.</p>
@@ -164,10 +165,7 @@ export default function AdminParticipantes({ onNavigate }) {
                     <tr key={u.id} className="border-b border-[#e4e4e0] last:border-b-0 hover:bg-[#fafaf8] transition-colors">
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[11px] font-extrabold flex-shrink-0"
-                            style={{ background: av.bg, color: av.text, boxShadow: "0 0 0 1.5px #e4e4e0" }}>
-                            {u.initials}
-                          </div>
+                          <Avatar foto={u.foto_perfil} iniciales={u.initials} size={34} border={1.5} fontSize={11} />
                           <div className="flex flex-col">
                             <span className="text-[13px] font-bold text-[#1a1a1a] leading-none">{u.nombre}</span>
                             <span className="text-[11px] font-semibold text-[#6b6b6b] mt-0.5">@{u.username}</span>
@@ -257,7 +255,7 @@ export default function AdminParticipantes({ onNavigate }) {
 
             <div className="bg-[#fafaf8] border border-[#e4e4e0] rounded-[12px] p-4 flex items-center gap-3 mb-6">
               <div className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-[12px] font-extrabold flex-shrink-0"
-                style={{ background: deleteTarget.av?.bg || "#d6f5e8", color: deleteTarget.av?.text || "#25854f", boxShadow: "0 0 0 1.5px #e4e4e0" }}>
+                style={{ background: deleteTarget.av?.bg || "var(--green-pale)", color: deleteTarget.av?.text || "var(--green-dk)", boxShadow: "0 0 0 1.5px var(--border)" }}>
                 {deleteTarget.initials}
               </div>
               <div>

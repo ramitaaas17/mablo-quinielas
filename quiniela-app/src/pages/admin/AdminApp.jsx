@@ -20,7 +20,7 @@ export default function AdminApp() {
   const Page = PAGES[page] || AdminDashboard;
 
   return (
-    <div className="w-full h-screen bg-[#fafaf8]">
+    <div className="w-full h-screen bg-[#fafaf8]" style={{ backgroundColor: "var(--bg)" }}>
       <Page onNavigate={setPage} />
     </div>
   );

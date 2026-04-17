@@ -30,6 +30,7 @@ class Usuario(db.Model):
     fecha_nacimiento = db.Column(db.Date, nullable=False)
     equipo_favorito = db.Column(UUID(as_uuid=True), db.ForeignKey('equipos.id_eqp'), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    foto_perfil = db.Column(db.Text, nullable=True)
 
 
 class Quiniela(db.Model):

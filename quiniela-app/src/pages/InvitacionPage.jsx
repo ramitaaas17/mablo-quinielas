@@ -21,12 +21,7 @@ function formatFechaCorta(iso) {
 
 // ── SVG helpers ──────────────────────────────────────────────────────────────
 const LogoIcon = () => (
-  <div style={{ width: 24, height: 24, background: "#1a1a1a", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <circle cx="7" cy="7" r="5" fill="white" />
-      <circle cx="7" cy="7" r="2" fill="#1a1a1a" />
-    </svg>
-  </div>
+  <img src="/iconoQuiniepicks.png" alt="Quiniepicks" width={56} height={56} style={{ objectFit: "contain", flexShrink: 0 }} />
 );
 
 const QuinielaIcon = () => (
@@ -291,7 +286,7 @@ export default function InvitacionPage() {
         <nav style={{ position: "relative", zIndex: 10, height: 64, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <LogoIcon />
-            <span style={{ fontSize: 15, fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.3px" }}>Quiniela</span>
+            <span style={{ fontSize: 15, fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.3px" }}>Quiniepicks</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: "#6b6b6b", border: "1px solid #e4e4e0", borderRadius: 40, padding: "4px 12px" }}>
@@ -371,7 +366,7 @@ export default function InvitacionPage() {
         <footer style={{ position: "relative", zIndex: 5, padding: "16px 24px", borderTop: "1px solid #e4e4e0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <LogoIcon />
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#1a1a1a", fontFamily: font }}>Quiniela</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#1a1a1a", fontFamily: font }}>Quiniepicks</span>
           </div>
           <p style={{ fontSize: 12, fontWeight: 600, color: "#6b6b6b", fontFamily: font }}>El dinero se gestiona directamente entre participantes.</p>
         </footer>
@@ -405,7 +400,7 @@ export default function InvitacionPage() {
         <nav style={{ position: "relative", zIndex: 10, height: 64, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <LogoIcon />
-            <span style={{ fontSize: 15, fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.3px" }}>Quiniela</span>
+            <span style={{ fontSize: 15, fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.3px" }}>Quiniepicks</span>
           </div>
           {!user && (
             <button
@@ -561,7 +556,7 @@ export default function InvitacionPage() {
         <footer style={{ position: "relative", zIndex: 5, padding: "16px 24px", borderTop: "1px solid #e4e4e0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <LogoIcon />
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#1a1a1a", fontFamily: font }}>Quiniela</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#1a1a1a", fontFamily: font }}>Quiniepicks</span>
           </div>
           <p style={{ fontSize: 12, fontWeight: 600, color: "#6b6b6b", fontFamily: font }}>
             El dinero se gestiona directamente entre participantes.

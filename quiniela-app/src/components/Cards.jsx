@@ -44,35 +44,30 @@ export function StatCard({ label, value, sub, dark = false }) {
         "rounded-[20px] border px-4 py-3 sm:px-[22px] sm:py-4 flex flex-col gap-1 flex-1 min-w-[110px] sm:min-w-[150px]",
         "transition-all duration-300 hover:-translate-y-1.5",
         dark
-          ? "bg-[#1a1a1a] border-[#1a1a1a] hover:shadow-[0_8px_32px_rgba(61,187,120,0.25)]"
+          ? "hover:shadow-[0_8px_32px_rgba(61,187,120,0.25)]"
           : "bg-white border-[#e4e4e0] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-[#d6f5e8]"
       )}
+      style={dark ? { backgroundColor: "var(--stat-dark-bg)", borderColor: "var(--stat-dark-bg)" } : {}}
     >
       <span
-        className={cn(
-          "text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.5px]",
-          dark ? "text-white/60" : "text-[#6b6b6b]"
-        )}
-        style={{ fontFamily: "Nunito, sans-serif" }}
+        className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.5px]",
+          dark ? "" : "text-[#6b6b6b]")}
+        style={{ fontFamily: "Nunito, sans-serif", ...(dark ? { color: "var(--stat-dark-label)" } : {}) }}
       >
         {label}
       </span>
       <span
-        className={cn(
-          "text-[20px] sm:text-[28px] font-black tracking-tight leading-none tabular-nums",
-          dark ? "text-white" : "text-[#1a1a1a]"
-        )}
-        style={{ fontFamily: "Nunito, sans-serif" }}
+        className={cn("text-[20px] sm:text-[28px] font-black tracking-tight leading-none tabular-nums",
+          dark ? "" : "text-[#1a1a1a]")}
+        style={{ fontFamily: "Nunito, sans-serif", ...(dark ? { color: "var(--stat-dark-text)" } : {}) }}
       >
         {animatedValue}
       </span>
       {sub && (
         <span
-          className={cn(
-            "text-[10px] sm:text-[11px] font-semibold mt-auto pt-1",
-            dark ? "text-white/50" : "text-[#6b6b6b]"
-          )}
-          style={{ fontFamily: "Nunito, sans-serif" }}
+          className={cn("text-[10px] sm:text-[11px] font-semibold mt-auto pt-1",
+            dark ? "" : "text-[#6b6b6b]")}
+          style={{ fontFamily: "Nunito, sans-serif", ...(dark ? { color: "var(--stat-dark-sub)" } : {}) }}
         >
           {sub}
         </span>
@@ -84,19 +79,15 @@ export function StatCard({ label, value, sub, dark = false }) {
 /* ── Badge ────────────────────────────────────────────────────────── */
 export function Badge({ status }) {
   const map = {
-    abierta:  { bg: "bg-[#d6f5e8]", text: "text-[#25854f]", label: "Abierta" },
-    resuelta: { bg: "bg-[#f2f2ef]", text: "text-[#6b6b6b]", label: "Resuelta" },
-    cerrada:  { bg: "bg-[#fee2e2]", text: "text-[#b91c1c]", label: "Cerrada" },
+    abierta:  { bg: "var(--green-pale)", text: "var(--green-dk)", label: "Abierta" },
+    resuelta: { bg: "var(--surface-2)",  text: "var(--text-2)",   label: "Resuelta" },
+    cerrada:  { bg: "var(--red-pale)",   text: "var(--red)",      label: "Cerrada" },
   };
   const s = map[status] || map.abierta;
   return (
     <span
-      className={cn(
-        s.bg, s.text,
-        "text-[10px] sm:text-[11px] font-extrabold px-2 sm:px-3 h-[22px] sm:h-[23px] rounded-full flex items-center justify-center",
-        "animate-scale-in"
-      )}
-      style={{ fontFamily: "Nunito, sans-serif" }}
+      className="text-[10px] sm:text-[11px] font-extrabold px-2 sm:px-3 h-[22px] sm:h-[23px] rounded-full flex items-center justify-center animate-scale-in"
+      style={{ fontFamily: "Nunito, sans-serif", backgroundColor: s.bg, color: s.text }}
     >
       {s.label}
     </span>
@@ -135,7 +126,7 @@ function DataPair({ label, value }) {
       <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.4px] text-[#6b6b6b]" style={{ fontFamily: "Nunito, sans-serif" }}>
         {label}
       </span>
-      <span className="text-[14px] sm:text-[15px] font-extrabold text-[#1a1a1a] truncate" style={{ fontFamily: "Nunito, sans-serif" }}>
+      <span className="text-[14px] sm:text-[15px] font-extrabold truncate" style={{ fontFamily: "Nunito, sans-serif", color: "var(--text)" }}>
         {value}
       </span>
     </div>
@@ -219,12 +210,17 @@ export function QuinielaCard({
             className={cn(
               "h-8 sm:h-9 px-4 sm:px-5 rounded-full text-[12px] sm:text-[13px] font-extrabold transition-all duration-200 active:scale-95",
               resolved
-                ? "border border-[#e4e4e0] text-[#1a1a1a] hover:bg-[#f2f2ef]"
+                ? "border border-[#e4e4e0] hover:bg-[#f2f2ef]"
                 : isOpen
-                  ? "bg-[#1a1a1a] text-white hover:bg-[#25854f] hover:shadow-lg hover:shadow-[#3dbb78]/30"
-                  : "bg-[#1a1a1a] text-white hover:bg-[#333] hover:shadow-lg hover:shadow-black/20"
+                  ? "hover:shadow-lg hover:shadow-[#3dbb78]/30"
+                  : "hover:shadow-lg hover:shadow-black/20"
             )}
-            style={{ fontFamily: "Nunito, sans-serif" }}
+            style={{
+              fontFamily: "Nunito, sans-serif",
+              ...(resolved
+                ? { color: "var(--text)" }
+                : { backgroundColor: "var(--btn-bg)", color: "var(--btn-text)" }),
+            }}
           >
             {buttonLabel}
           </button>
@@ -239,8 +235,8 @@ export function SectionHeader({ title }) {
   return (
     <div className="flex items-center gap-4 mb-4 sm:mb-5">
       <span
-        className="text-[12px] sm:text-[13px] font-extrabold uppercase tracking-[0.6px] text-[#6b6b6b] whitespace-nowrap"
-        style={{ fontFamily: "Nunito, sans-serif" }}
+        className="text-[12px] sm:text-[13px] font-extrabold uppercase tracking-[0.6px] whitespace-nowrap"
+        style={{ fontFamily: "Nunito, sans-serif", color: "var(--text-2)" }}
       >
         {title}
       </span>
@@ -259,7 +255,7 @@ export function SectionHeader({ title }) {
 /* ── CardSkeleton — shimmer placeholder while data loads ──────────── */
 export function CardSkeleton() {
   return (
-    <div className="bg-white border border-[#e4e4e0] rounded-[20px] overflow-hidden flex flex-col">
+    <div className="border border-[#e4e4e0] rounded-[20px] overflow-hidden flex flex-col" style={{ backgroundColor: "var(--surface)" }}>
       <div className="h-1 w-full animate-shimmer" />
       <div className="p-5 flex flex-col gap-4">
         {/* Title row */}
@@ -283,7 +279,7 @@ export function CardSkeleton() {
         <div className="flex items-center justify-between pt-1">
           <div className="flex gap-[-4px]">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="w-6 h-6 rounded-full animate-shimmer -ml-1 first:ml-0 border-2 border-white" />
+              <div key={i} className="w-6 h-6 rounded-full animate-shimmer -ml-1 first:ml-0 border-2" style={{ borderColor: "var(--surface)" }} />
             ))}
           </div>
           <div className="h-8 w-28 rounded-full animate-shimmer" />

@@ -210,6 +210,12 @@ export function PrediccionesView({
   const wildcardMatch   = partidos.find((p) => Array.isArray(preds[p.id]) && preds[p.id].length === 2);
   const wildcardMatchId = wildcardMatch?.id ?? null;
 
+  /* ── Cierre check ── */
+  const isClosed = useMemo(() => {
+    if (!quiniela.cierreIso) return false;
+    return Date.now() > new Date(quiniela.cierreIso).getTime();
+  }, [quiniela.cierreIso]);
+
   /* ── Detect perfect score for confetti ── */
   const isPerfect = useMemo(() => {
     if (quiniela.status !== "resuelta") return false;
@@ -232,7 +238,7 @@ export function PrediccionesView({
 
   /* ── Handlers ── */
   const handlePredict = (partidoId, pick) => {
-    if (isPending || isSinPago) return;
+    if (isPending || isSinPago || isClosed) return;
     guardarPrediccion(quiniela.id, partidoId, pick);
     setSaveMsg("");
   };
@@ -266,16 +272,21 @@ export function PrediccionesView({
 
   /* ── Derived: per-match results ── */
   const matchMeta = useMemo(
-    () =>
-      partidos.map((p) => {
+    () => {
+      const now = Date.now();
+      return partidos.map((p) => {
         const actualResult = getResult(p.ptos_local, p.ptos_visitante);
         const matchFinished = actualResult !== null;
         const arrSeleccion  = preds[p.id] || [];
         const userPicked    = arrSeleccion.length > 0;
         const userHit       = matchFinished && userPicked && arrSeleccion.includes(actualResult);
         const userMissed    = matchFinished && userPicked && !arrSeleccion.includes(actualResult);
-        return { actualResult, matchFinished, arrSeleccion, userPicked, userHit, userMissed };
-      }),
+        // Live: scores available + still within ~130 min from kick-off
+        const startMs = p.inicio ? new Date(p.inicio).getTime() : 0;
+        const isLive  = matchFinished && startMs > 0 && now >= startMs && now < startMs + 130 * 60 * 1000;
+        return { actualResult, matchFinished, isLive, arrSeleccion, userPicked, userHit, userMissed };
+      });
+    },
     [partidos, preds]
   );
 
@@ -338,6 +349,20 @@ export function PrediccionesView({
             </div>
           )}
 
+          {isClosed && quiniela.status !== "resuelta" && (
+            <div className="bg-[#f2f2ef] border border-[#e4e4e0] rounded-xl p-4 flex gap-3 items-center mb-2 animate-fade-in-up">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <div className="flex-1" style={{ fontFamily: font }}>
+                <span className="text-[13px] font-extrabold text-[#1a1a1a]">Votación cerrada</span>
+                <span className="text-[12px] font-semibold text-[#6b6b6b] ml-2">
+                  El plazo de predicciones venció el {quiniela.cierre}.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Progress dots + hit summary */}
           <div className="flex items-center gap-3 px-2 mb-1">
             <div className="flex gap-1">
@@ -384,7 +409,7 @@ export function PrediccionesView({
           {/* ── Partido cards ── */}
           {partidos.map((p, idx) => {
             const {
-              actualResult, matchFinished,
+              actualResult, matchFinished, isLive,
               arrSeleccion, userPicked, userHit, userMissed,
             } = matchMeta[idx];
 
@@ -396,7 +421,9 @@ export function PrediccionesView({
                 className={cn(
                   "bg-white border rounded-[16px] p-4 flex flex-col gap-3 relative overflow-hidden",
                   /* Result state styles */
-                  matchFinished && userHit
+                  isLive
+                    ? "border-[#ef4444] shadow-[0_0_0_1px_rgba(239,68,68,0.15)]"
+                    : matchFinished && userHit
                     ? "border-[#3dbb78] animate-hit-flash"
                     : matchFinished && userMissed
                     ? "border-[#fca5a5] bg-[#fff8f8] animate-miss-shake"
@@ -458,10 +485,10 @@ export function PrediccionesView({
                         <div
                           className={cn(
                             "flex items-center gap-1 px-3 py-1 rounded-[10px] animate-score-reveal flex-shrink-0",
-                            userHit
+                            isLive
+                              ? "bg-[#ef4444] text-white"
+                              : userHit
                               ? "bg-[#3dbb78] text-white"
-                              : userMissed
-                              ? "bg-[#1a1a1a] text-white"
                               : "bg-[#1a1a1a] text-white"
                           )}
                           style={{ animationDelay: `${idx * 40 + 100}ms` }}
@@ -499,9 +526,20 @@ export function PrediccionesView({
                         </span>
                       </div>
                     )}
-                    <span className="text-[11px] font-semibold text-[#a0a0a0] mt-0.5 block" style={{ fontFamily: font }}>
-                      {p.fecha}
-                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {isLive && (
+                        <span className="inline-flex items-center gap-1 bg-[#ef4444] text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                          <span className="relative flex h-[6px] w-[6px]">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                            <span className="relative inline-flex rounded-full h-[6px] w-[6px] bg-white" />
+                          </span>
+                          En vivo
+                        </span>
+                      )}
+                      <span className="text-[11px] font-semibold text-[#a0a0a0]" style={{ fontFamily: font }}>
+                        {p.fecha}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -704,10 +742,10 @@ export function PrediccionesView({
               )}
               <PrimaryButton
                 onClick={handleSave}
-                disabled={saving || isPending || isSinPago || quiniela.status === "resuelta"}
+                disabled={saving || isPending || isSinPago || isClosed || quiniela.status === "resuelta"}
                 className="w-full text-[14px]"
               >
-                {saving ? "Guardando..." : quiniela.status === "resuelta" ? "Quiniela finalizada" : "Guardar mis predicciones"}
+                {saving ? "Guardando..." : quiniela.status === "resuelta" ? "Quiniela finalizada" : isClosed ? "Plazo de votación cerrado" : "Guardar mis predicciones"}
               </PrimaryButton>
             </div>
           </div>

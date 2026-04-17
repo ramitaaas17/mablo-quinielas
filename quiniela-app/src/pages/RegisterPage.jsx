@@ -74,7 +74,7 @@ export default function RegisterPage() {
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 pointer-events-none">
         <div
           className="w-[200vw] md:w-[1400px] h-[400px] md:h-[500px] rounded-b-[50%] animate-breathe"
-          style={{ backgroundImage: "linear-gradient(145deg, rgb(252,228,236) 0%, rgb(253,232,216) 40%, rgb(214,245,232) 100%)", opacity: 0.55 }}
+          style={{ backgroundImage: "var(--hero-blob-img)", opacity: 0.55 }}
         />
       </div>
 
@@ -86,7 +86,7 @@ export default function RegisterPage() {
           <img
             src={REGISTER_BG}
             alt="Perro anotando gol"
-            fetchpriority="high"
+            fetchPriority="high"
             decoding="async"
             className="w-full max-w-[800px] object-contain drop-shadow-lg"
           />

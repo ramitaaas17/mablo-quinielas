@@ -4,6 +4,22 @@ import { persist } from 'zustand/middleware';
 export const useStore = create(
   persist(
     (set, get) => ({
+      // ─── THEME ──────────────────────────────────────────────────────────────
+      theme: (typeof window !== 'undefined' ? localStorage.getItem('qp-theme') : null) || 'light',
+
+      toggleTheme: () => {
+        set((state) => {
+          const next = state.theme === 'dark' ? 'light' : 'dark';
+          localStorage.setItem('qp-theme', next);
+          if (next === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+          return { theme: next };
+        });
+      },
+
       // ─── AUTH ───────────────────────────────────────────────────────────────
       user: null,
 

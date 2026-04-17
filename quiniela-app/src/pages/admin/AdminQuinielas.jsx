@@ -26,7 +26,7 @@ export default function AdminQuinielas({ onNavigate }) {
   // Create quiniela modal
   const [showCreate, setShowCreate] = useState(false);
   const [createData, setCreateData] = useState({
-    nombre: "", id_liga: "", inicio: "", cierre: "", precio_entrada: "", comision: "10", imagen_fondo: ""
+    nombre: "", id_liga: "", cierre: "", precio_entrada: "", comision: "10", imagen_fondo: ""
   });
   const [createError, setCreateError] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
@@ -126,12 +126,8 @@ export default function AdminQuinielas({ onNavigate }) {
   };
 
   const handleCreate = async () => {
-    if (!createData.nombre || !createData.id_liga || !createData.inicio || !createData.cierre || !createData.precio_entrada) {
+    if (!createData.nombre || !createData.id_liga || !createData.cierre || !createData.precio_entrada) {
       setCreateError("Completa todos los campos.");
-      return;
-    }
-    if (new Date(createData.cierre) <= new Date(createData.inicio)) {
-      setCreateError("El cierre debe ser después del inicio.");
       return;
     }
     setCreateLoading(true);
@@ -139,14 +135,13 @@ export default function AdminQuinielas({ onNavigate }) {
       await adminService.crearQuiniela({
         nombre: createData.nombre,
         id_liga: createData.id_liga,
-        inicio: createData.inicio,
         cierre: createData.cierre,
         precio_entrada: parseFloat(createData.precio_entrada),
         comision: parseFloat(createData.comision || 0),
         imagen_fondo: createData.imagen_fondo || null,
       });
       setShowCreate(false);
-      setCreateData({ nombre: "", id_liga: ligas[0]?.id || "", inicio: "", cierre: "", precio_entrada: "", comision: "10", imagen_fondo: "" });
+      setCreateData({ nombre: "", id_liga: ligas[0]?.id || "", cierre: "", precio_entrada: "", comision: "10", imagen_fondo: "" });
       cargar();
     } catch (err) {
       setCreateError(err?.response?.data?.error || "Error al crear quiniela.");
@@ -296,7 +291,7 @@ export default function AdminQuinielas({ onNavigate }) {
       {/* Stats banner */}
       <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-4 md:px-7 pt-7 pb-7 flex-shrink-0">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1400px] h-[260px] rounded-b-[415px] opacity-45 pointer-events-none"
-          style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }} />
+          style={{ backgroundImage: "var(--hero-blob-img)" }} />
         <div className="relative z-10">
           <h1 className="text-[22px] font-black text-[#1a1a1a] tracking-[-0.6px]" style={{ fontFamily: font }}>Gestión de Quinielas</h1>
           <p className="text-[12px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>Crea, edita y administra tus quinielas.</p>
@@ -417,8 +412,7 @@ export default function AdminQuinielas({ onNavigate }) {
                 options={ligas.map(l => ({ value: l.id, label: `${l.nombre} (${l.pais})` }))}
               />
               <div className="grid grid-cols-2 gap-3">
-                <InputField label="Inicio *" type="datetime-local" value={createData.inicio} onChange={setC("inicio")} />
-                <InputField label="Cierre *" type="datetime-local" value={createData.cierre} onChange={setC("cierre")} />
+                <InputField label="Cierre de votación *" type="datetime-local" value={createData.cierre} onChange={setC("cierre")} helperText="Fecha y hora límite para que los usuarios envíen sus predicciones." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <InputField label="Precio entrada ($) *" type="number" placeholder="100" value={createData.precio_entrada} onChange={setC("precio_entrada")} />

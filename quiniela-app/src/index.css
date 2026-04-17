@@ -7,6 +7,201 @@ html, body {
 }
 
 /* ════════════════════════════════════════
+   THEME TOKENS
+   ════════════════════════════════════════ */
+
+:root {
+  /* Backgrounds */
+  --bg:            #fafaf8;
+  --surface:       #ffffff;
+  --surface-2:     #f2f2ef;
+  --surface-3:     #fafaf8;
+  /* Borders */
+  --border:        #e4e4e0;
+  --border-2:      #e0e0dc;
+  /* Text */
+  --text:          #1a1a1a;
+  --text-2:        #6b6b6b;
+  --text-3:        #a0a09c;
+  /* Brand */
+  --green:         #3dbb78;
+  --green-dk:      #25854f;
+  --green-pale:    #d6f5e8;
+  --orange:        #f4a030;
+  --orange-pale:   #fde8d8;
+  --red:           #d93025;
+  --red-pale:      #fee2e2;
+  /* Buttons */
+  --btn-bg:        #1a1a1a;
+  --btn-text:      #ffffff;
+  --btn-hover:     #25854f;
+  /* Shimmer */
+  --shimmer-1:     #eeeeea;
+  --shimmer-2:     #e0e0dc;
+  /* Hero gradients */
+  --hero-blob-img: linear-gradient(145deg, rgb(252,228,236) 0%, rgb(253,232,216) 40%, rgb(214,245,232) 100%);
+  --hero-fade-r:   linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 30%, rgba(255,255,255,0) 55%);
+  /* Stat dark variant */
+  --stat-dark-bg:    #1a1a1a;
+  --stat-dark-text:  #ffffff;
+  --stat-dark-label: rgba(255,255,255,0.60);
+  --stat-dark-sub:   rgba(255,255,255,0.50);
+  /* Semantic text colors */
+  --orange-text:   #a05a00;
+  --blue-text:     #1d4ed8;
+  --purple-text:   #7c3aed;
+  /* Misc */
+  --surface-glass: rgba(255,255,255,0.60);
+  --input-bg:      #ffffff;
+  --avatar-border: #ffffff;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* ── Base — warm espresso blacks, not cold grays ── */
+  --bg:            #100e0b;
+  --surface:       #1c1917;
+  --surface-2:     #252118;
+  --surface-3:     #201d15;
+  --border:        #2e2920;
+  --border-2:      #28231c;
+  /* ── Text — warm cream, not cold white ── */
+  --text:          #f0ebe2;
+  --text-2:        #9e9580;
+  --text-3:        #5a5448;
+  /* ── Brand — slightly brighter greens for dark contrast ── */
+  --green-dk:      #55cc8a;
+  --green-pale:    #0d2018;
+  --orange-pale:   #251a08;
+  --red:           #e85550;
+  --red-pale:      #2d1212;
+  /* ── Buttons — warm off-white, not cold white ── */
+  --btn-bg:        #ede9df;
+  --btn-text:      #1c1917;
+  --btn-hover:     #d8d4c8;
+  /* ── Shimmer — warm tones ── */
+  --shimmer-1:     #252218;
+  --shimmer-2:     #1e1b12;
+  /* ── Hero gradients ── */
+  --hero-blob-img: linear-gradient(145deg, rgba(38,20,15,0.85) 0%, rgba(42,28,8,0.85) 40%, rgba(10,28,18,0.85) 100%);
+  --hero-fade-r:   linear-gradient(to right, rgba(16,14,11,1) 0%, rgba(16,14,11,0.85) 30%, rgba(16,14,11,0) 55%);
+  /* ── Stat card dark variant ── */
+  --stat-dark-bg:    rgba(61,187,120,0.10);
+  --stat-dark-text:  #55cc8a;
+  --stat-dark-label: rgba(85,204,138,0.65);
+  --stat-dark-sub:   rgba(85,204,138,0.50);
+  /* ── Semantic text colors ── */
+  --orange-text:   #e09040;
+  --blue-text:     #6090e0;
+  --purple-text:   #a080e8;
+  /* ── Misc ── */
+  --surface-glass: rgba(18,15,11,0.88);
+  --input-bg:      #201d15;
+  --avatar-border: #2e2920;
+}
+
+/* ════════════════════════════════════════
+   DARK MODE OVERRIDES
+   Rules outside @layer beat Tailwind's
+   layered utilities without !important.
+   ════════════════════════════════════════ */
+
+/* ── Backgrounds ─────────────────────────────────────────────── */
+[data-theme="dark"] .bg-white          { background-color: var(--surface); }
+[data-theme="dark"] .bg-\[\#fafaf8\]   { background-color: var(--bg); }
+[data-theme="dark"] .bg-\[\#f2f2ef\]   { background-color: var(--surface-2); }
+[data-theme="dark"] .bg-white\/60      { background-color: var(--surface-glass); }
+
+/* ── Borders ─────────────────────────────────────────────────── */
+[data-theme="dark"] .border-\[\#e4e4e0\]  { border-color: var(--border); }
+[data-theme="dark"] .border-\[\#e0e0dc\]  { border-color: var(--border-2); }
+[data-theme="dark"] .border-\[\#ebebeb\]  { border-color: var(--border-2); }
+
+/* ── Primary text ────────────────────────────────────────────── */
+[data-theme="dark"] .text-\[\#1a1a1a\]   { color: var(--text); }
+[data-theme="dark"] .text-\[\#6b6b6b\]   { color: var(--text-2); }
+[data-theme="dark"] .text-\[\#a0a09c\]   { color: var(--text-3); }
+
+/* ── Hover states ────────────────────────────────────────────── */
+[data-theme="dark"] .hover\:bg-\[\#f2f2ef\]:hover  { background-color: var(--surface-2); }
+[data-theme="dark"] .hover\:bg-\[\#fafaf8\]:hover   { background-color: var(--surface-3); }
+[data-theme="dark"] .hover\:text-\[\#1a1a1a\]:hover { color: var(--text); }
+[data-theme="dark"] .hover\:border-\[\#d6f5e8\]:hover { border-color: #1d3a2a; }
+
+/* ── Focus rings ─────────────────────────────────────────────── */
+[data-theme="dark"] .focus\:border-\[\#3dbb78\]:focus { border-color: var(--green); }
+
+/* ── Dark fills that need a lift in dark mode ────────────────── */
+/* Score pills, number badges etc — warm lifted dark */
+[data-theme="dark"] .bg-\[\#1a1a1a\] { background-color: #3a3530; }
+
+/* ── Semantic color overrides ────────────────────────────────── */
+/* Green pale badges/chips */
+[data-theme="dark"] .bg-\[\#d6f5e8\]  { background-color: var(--green-pale); }
+[data-theme="dark"] .text-\[\#25854f\] { color: var(--green-dk); }
+/* Orange pale */
+[data-theme="dark"] .bg-\[\#fde8d8\]  { background-color: var(--orange-pale); }
+/* Red pale */
+[data-theme="dark"] .bg-\[\#fee2e2\]  { background-color: var(--red-pale); }
+[data-theme="dark"] .bg-\[\#fff1f2\]  { background-color: var(--red-pale); }
+[data-theme="dark"] .text-\[\#b91c1c\] { color: var(--red); }
+[data-theme="dark"] .text-\[\#ef4444\] { color: #e87060; }
+
+/* ── Banner / alert backgrounds (banners use light pastels in light mode) ── */
+[data-theme="dark"] .bg-\[\#fce4ec\]  { background-color: #2a1420; }  /* inscripcion alert — warm dark rose */
+[data-theme="dark"] .bg-\[\#fff3e0\]  { background-color: #251a08; }  /* pending payment — warm dark amber */
+[data-theme="dark"] .bg-\[\#fff8f0\]  { background-color: #211608; }  /* E selected, wildcard label */
+[data-theme="dark"] .bg-\[\#fffdfa\]  { background-color: var(--surface-3); }  /* wildcard card bg */
+[data-theme="dark"] .bg-\[\#f2fbf6\]  { background-color: #0d1f14; }  /* L/V selected */
+[data-theme="dark"] .bg-\[\#f0f7fc\]  { background-color: #0c1822; }  /* V correct state */
+[data-theme="dark"] .bg-\[\#e0f0fc\]  { background-color: #0c1822; }  /* V correct bg alias */
+[data-theme="dark"] .bg-\[\#fafafa\]  { background-color: var(--surface-2); }  /* unpredicted match */
+[data-theme="dark"] .bg-\[\#fefce8\]  { background-color: #1e1a08; }  /* unsaved changes warning */
+[data-theme="dark"] .bg-\[\#fef3c7\]  { background-color: #1e1808; }  /* modal E chip */
+[data-theme="dark"] .bg-\[\#dbeafe\]  { background-color: #0c1828; }  /* modal V chip */
+
+/* ── Banner / state text colors ── */
+[data-theme="dark"] .text-\[\#7a4a00\]  { color: #dda060; }  /* pending banner main text — warm gold */
+[data-theme="dark"] .text-\[\#b87333\]  { color: #e0a050; }  /* E selected text — warm amber */
+[data-theme="dark"] .text-\[\#1069a8\]  { color: #70b8dd; }  /* V correct/selected text — soft blue */
+[data-theme="dark"] .text-\[\#ea4335\]  { color: #e87060; }  /* cierre date — warm red */
+[data-theme="dark"] .text-\[\#92400e\]  { color: #dda060; }  /* unsaved changes warning — warm amber */
+
+/* ── Banner borders ── */
+[data-theme="dark"] .border-\[\#f48fb1\]  { border-color: #5a2840; }  /* inscripcion alert border */
+[data-theme="dark"] .border-\[\#fca5a5\]  { border-color: #5a2020; }  /* miss button border */
+[data-theme="dark"] .border-\[\#fbbf24\]  { border-color: #5a4010; }  /* unsaved changes border */
+
+/* ── Avatar / stack borders — white borders look harsh in dark mode ── */
+[data-theme="dark"] .border-white  { border-color: var(--avatar-border); }
+
+/* ── Admin panel — destructive red button ── */
+[data-theme="dark"] .bg-\[\#d93025\]               { background-color: #7a2020; }
+[data-theme="dark"] .hover\:bg-\[\#b91c1c\]:hover   { background-color: #5a1818; }
+
+/* ── Admin panel — pending row / notice backgrounds ── */
+[data-theme="dark"] .bg-\[\#fffdf5\]               { background-color: var(--surface-3); }
+[data-theme="dark"] .bg-\[\#f0fdf4\]               { background-color: #0a1f12; }
+
+/* ── Admin panel — state / badge borders ── */
+[data-theme="dark"] .border-\[\#bbf7d0\]           { border-color: #1a4428; }
+[data-theme="dark"] .border-\[\#fed7aa\]           { border-color: #4a2e10; }
+[data-theme="dark"] .border-\[\#3dbb78\]           { border-color: #2a5a3a; }
+
+/* ── Admin panel — inline-used text colors as Tailwind classes ── */
+[data-theme="dark"] .text-\[\#a05a00\]             { color: var(--orange-text); }
+[data-theme="dark"] .text-\[\#f4a030\]             { color: #e0a050; }
+[data-theme="dark"] .text-\[\#1d4ed8\]             { color: var(--blue-text); }
+
+/* ── Hover bg overrides ── */
+[data-theme="dark"] .hover\:bg-\[\#d6f5e8\]:hover  { background-color: var(--green-pale); }
+
+/* Shimmer ─────────────────────────────────────────────────── */
+[data-theme="dark"] .animate-shimmer {
+  background: linear-gradient(90deg, var(--shimmer-1) 0%, var(--shimmer-2) 50%, var(--shimmer-1) 100%);
+}
+
+/* ════════════════════════════════════════
    KEYFRAMES
    ════════════════════════════════════════ */
 

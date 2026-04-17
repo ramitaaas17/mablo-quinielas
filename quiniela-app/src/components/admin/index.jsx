@@ -1,6 +1,23 @@
 import { useState } from "react";
 import { useStore } from "../../store";
 
+// Inline sun/moon icons — avoid adding a lucide-react import to this file
+function IconSun({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+  );
+}
+
+function IconMoon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  );
+}
+
 // ─── DESIGN TOKENS ─────────────────────────────────────────────────────────
 export const C = {
   black:    "#1a1a1a",
@@ -165,18 +182,10 @@ export function IconCheck({ size = 11, color = C.greenDark }) {
   );
 }
 
-// Logo Quiniela SVG
-export function LogoIcon({ size = 28 }) {
+// App logo
+export function LogoIcon({ size = 64 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="14" r="12" fill="#1a1a1a" />
-      <circle cx="14" cy="14" r="5" fill="white" />
-      <circle cx="14" cy="14" r="2" fill="#1a1a1a" />
-      <circle cx="7" cy="7" r="2" fill="white" opacity="0.6" />
-      <circle cx="21" cy="7" r="2" fill="white" opacity="0.6" />
-      <circle cx="7" cy="21" r="2" fill="white" opacity="0.6" />
-      <circle cx="21" cy="21" r="2" fill="white" opacity="0.6" />
-    </svg>
+    <img src="/iconoQuiniepicks.png" alt="Quiniepicks" width={size} height={size} style={{ objectFit: "contain", flexShrink: 0, minWidth: size, minHeight: size }} />
   );
 }
 
@@ -191,6 +200,9 @@ const NAV_ITEMS = [
 ];
 
 export function Sidebar({ active, onNavigate, onClose }) {
+  const { theme, toggleTheme } = useStore();
+  const isDark = theme === 'dark';
+
   const sections = [
     { id: "general",   label: "General" },
     { id: "quinielas", label: "Quinielas" },
@@ -202,15 +214,15 @@ export function Sidebar({ active, onNavigate, onClose }) {
   };
 
   return (
-    <aside className="w-[196px] flex-shrink-0 bg-white border-r border-[#e4e4e0] flex flex-col h-full" style={{ fontFamily: font }}>
+    <aside className="w-[196px] flex-shrink-0 border-r border-[#e4e4e0] flex flex-col h-full bg-white" style={{ fontFamily: font }}>
       {/* Logo header */}
       <div className="border-b border-[#e4e4e0] px-4 py-5 flex items-center gap-2.5">
-        <LogoIcon size={28} />
+        <LogoIcon size={48} />
         <div className="flex flex-col gap-[2px] flex-1">
-          <span className="text-[14px] font-black text-[#1a1a1a] tracking-[-0.3px] leading-none">Quiniela</span>
-          <span className="text-[9px] font-extrabold bg-[#1a1a1a] text-white px-1.5 py-0.5 rounded-[4px] uppercase tracking-[0.5px] w-fit">Admin</span>
+          <span className="text-[14px] font-black text-[#1a1a1a] tracking-[-0.3px] leading-none">Quiniepicks</span>
+          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-[4px] uppercase tracking-[0.5px] w-fit"
+            style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}>Admin</span>
         </div>
-        {/* Close button — only visible when used as drawer on mobile */}
         {onClose && (
           <button onClick={onClose} className="ml-auto p-1 rounded-[6px] hover:bg-[#f2f2ef] transition-colors md:hidden">
             <IconX size={16} color="#6b6b6b" />
@@ -232,12 +244,15 @@ export function Sidebar({ active, onNavigate, onClose }) {
                   key={item.id}
                   onClick={() => handleNav(item.id)}
                   className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-[10px] text-[13px] font-bold transition-all duration-200 ${
-                    isActive
-                      ? "bg-[#1a1a1a] text-white shadow-md"
-                      : "text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] hover:translate-x-0.5"
+                    isActive ? "shadow-sm" : "text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] hover:translate-x-0.5"
                   }`}
+                  style={isActive ? { backgroundColor: "var(--text)", color: "var(--bg)" } : {}}
                 >
-                  <item.Icon size={14} color={isActive ? "white" : "#6b6b6b"} opacity={isActive ? 1 : 0.5} />
+                  <item.Icon
+                    size={14}
+                    color={isActive ? (isDark ? "#101010" : "white") : "#6b6b6b"}
+                    opacity={isActive ? 1 : 0.5}
+                  />
                   <span className="flex-1 text-left">{item.label}</span>
                   {item.badge && !isActive && (
                     <span className="relative flex-shrink-0 w-[6px] h-[6px]">
@@ -253,7 +268,17 @@ export function Sidebar({ active, onNavigate, onClose }) {
       </nav>
 
       {/* User footer */}
-      <div className="border-t border-[#e4e4e0] px-2.5 py-3">
+      <div className="border-t border-[#e4e4e0] px-2.5 py-3 flex flex-col gap-2">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-[8px] hover:bg-[#f2f2ef] transition-colors text-[11px] font-bold text-[#6b6b6b]"
+        >
+          <span className="w-[18px] flex items-center justify-center" style={{ color: isDark ? "#f4a030" : "#6b6b6b" }}>
+            {isDark ? <IconSun size={13} /> : <IconMoon size={13} />}
+          </span>
+          {isDark ? "Tema claro" : "Tema oscuro"}
+        </button>
         <div className="flex items-center gap-2 px-2 py-1.5">
           <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] font-extrabold text-[#25854f] flex-shrink-0 transition-transform duration-200 hover:scale-110">
             AD
@@ -277,14 +302,16 @@ export function Sidebar({ active, onNavigate, onClose }) {
 // ─── TOP BAR ────────────────────────────────────────────────────────────────
 export function TopBar({ title, badge, children, onMenuToggle }) {
   return (
-    <div className="h-[58px] bg-white border-b border-[#e4e4e0] flex items-center justify-between px-4 md:px-7 flex-shrink-0 gap-2" style={{ fontFamily: font }}>
+    <div
+      className="h-[58px] border-b border-[#e4e4e0] flex items-center justify-between px-4 md:px-7 flex-shrink-0 gap-2 bg-white"
+      style={{ fontFamily: font }}
+    >
       <div className="flex items-center gap-3 min-w-0">
-        {/* Hamburger — solo móvil */}
         <button
           onClick={onMenuToggle}
           className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-[#f2f2ef] transition-colors flex-shrink-0"
         >
-          <IconMenu size={18} color="#1a1a1a" />
+          <IconMenu size={18} color="var(--text)" />
         </button>
         <span className="text-[14px] font-black text-[#1a1a1a] truncate">{title}</span>
         {badge && (
@@ -295,9 +322,9 @@ export function TopBar({ title, badge, children, onMenuToggle }) {
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {children}
-        <div className="relative w-8 h-8 bg-white border border-[#e4e4e0] rounded-[9px] flex items-center justify-center flex-shrink-0 hover:bg-[#f2f2ef] transition-colors cursor-pointer">
+        <div className="relative w-8 h-8 border border-[#e4e4e0] rounded-[9px] flex items-center justify-center flex-shrink-0 hover:bg-[#f2f2ef] transition-colors cursor-pointer bg-white">
           <IconBell size={14} color="#6b6b6b" />
-          <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full bg-[#f4a030] border border-white">
+          <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full bg-[#f4a030]" style={{ border: "1.5px solid var(--surface)" }}>
             <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
           </span>
         </div>
@@ -313,27 +340,29 @@ export function TopBar({ title, badge, children, onMenuToggle }) {
 export function AdminStatCard({ label, value, sub, dark = false, accent }) {
   return (
     <div
-      className={`flex-1 rounded-[14px] border px-4 py-3 flex flex-col gap-1 min-w-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
-        dark ? "bg-[#1a1a1a] border-[#1a1a1a]" : "bg-white border-[#e4e4e0]"
-      }`}
+      className="flex-1 rounded-[14px] border px-4 py-3 flex flex-col gap-1 min-w-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
       style={{
         fontFamily: font,
+        backgroundColor: dark ? "var(--stat-dark-bg)" : "var(--surface)",
+        borderColor: dark ? "var(--stat-dark-bg)" : "var(--border)",
         ...(accent && !dark ? { borderTopColor: accent, borderTopWidth: 2 } : {}),
       }}
     >
       <span
-        className={`text-[10px] font-bold uppercase tracking-[0.4px] ${dark ? "text-white/50" : "text-[#6b6b6b]"}`}
+        className="text-[10px] font-bold uppercase tracking-[0.4px]"
+        style={{ color: dark ? "var(--stat-dark-label)" : "var(--text-2)" }}
       >
         {label}
       </span>
       <span
         className="text-[22px] font-black tracking-[-0.8px] leading-none"
-        style={{ color: accent || (dark ? "white" : "#1a1a1a"), fontFamily: font }}
+        style={{ color: accent || (dark ? "var(--stat-dark-text)" : "var(--text)"), fontFamily: font }}
       >
         {value}
       </span>
       {sub && (
-        <span className={`text-[10px] font-semibold ${dark ? "text-white/40" : "text-[#6b6b6b]"}`}>{sub}</span>
+        <span className="text-[10px] font-semibold"
+          style={{ color: dark ? "var(--stat-dark-sub)" : "var(--text-2)" }}>{sub}</span>
       )}
     </div>
   );
@@ -343,12 +372,13 @@ export function AdminStatCard({ label, value, sub, dark = false, accent }) {
 export function SectionHeader({ title, action, onAction, actionIcon }) {
   return (
     <div className="flex items-center gap-2 mb-3" style={{ fontFamily: font }}>
-      <span className="text-[11px] font-extrabold uppercase tracking-[0.6px] text-[#6b6b6b] whitespace-nowrap">{title}</span>
-      <div className="flex-1 h-px bg-[#e4e4e0]" />
+      <span className="text-[11px] font-extrabold uppercase tracking-[0.6px] whitespace-nowrap" style={{ color: "var(--text-2)" }}>{title}</span>
+      <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
       {action && (
         <button
           onClick={onAction}
-          className="flex items-center gap-1 bg-[#1a1a1a] text-white text-[11px] font-extrabold px-2.5 h-7 rounded-full hover:bg-[#333] transition-colors"
+          className="flex items-center gap-1 text-[11px] font-extrabold px-2.5 h-7 rounded-full transition-colors"
+          style={{ backgroundColor: "var(--btn-bg)", color: "var(--btn-text)" }}
         >
           {actionIcon && actionIcon}
           {action}
@@ -360,19 +390,19 @@ export function SectionHeader({ title, action, onAction, actionIcon }) {
 
 // ─── BADGE ──────────────────────────────────────────────────────────────────
 const BADGE_MAP = {
-  abierta:   { bg: "#d6f5e8", text: "#25854f" },
-  resuelta:  { bg: "#f2f2ef", text: "#6b6b6b" },
-  pagado:    { bg: "#d6f5e8", text: "#25854f" },
-  pendiente: { bg: "#fff3e0", text: "#a05a00" },
-  "sin pago":{ bg: "#f2f2ef", text: "#6b6b6b" },
-  prediccion:{ bg: "#d6f5e8", text: "#25854f" },
-  "pago enviado": { bg: "#f2f2ef", text: "#1d4ed8" },
-  "nuevo usuario":{ bg: "#fde8d8", text: "#a05a00" },
+  abierta:        { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  resuelta:       { bg: "var(--surface-2)",   text: "var(--text-2)" },
+  pagado:         { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  pendiente:      { bg: "var(--orange-pale)", text: "var(--orange-text)" },
+  "sin pago":     { bg: "var(--surface-2)",   text: "var(--text-2)" },
+  prediccion:     { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  "pago enviado": { bg: "var(--surface-2)",   text: "var(--blue-text)" },
+  "nuevo usuario":{ bg: "var(--orange-pale)", text: "var(--orange-text)" },
 };
 
 export function Badge({ label }) {
   const key = (label || "").toLowerCase();
-  const s = BADGE_MAP[key] || { bg: "#f2f2ef", text: "#6b6b6b" };
+  const s = BADGE_MAP[key] || { bg: "var(--surface-2)", text: "var(--text-2)" };
   return (
     <span
       className="text-[11px] font-extrabold px-2.5 py-[3px] rounded-full whitespace-nowrap"
@@ -399,7 +429,7 @@ export function AdminLayout({ active, onNavigate, children }) {
       : children;
 
   return (
-    <div className="flex w-full h-screen bg-[#fafaf8] overflow-hidden">
+    <div className="flex w-full h-screen overflow-hidden" style={{ backgroundColor: "var(--bg)" }}>
 
       {/* Sidebar desktop — siempre visible en md+ */}
       <div className="hidden md:flex flex-shrink-0">
@@ -443,10 +473,11 @@ export function MiniQuinielaCard({ title, league, status, pozo, pagados, partido
   const ratio = parseInt((pagados || "0/1").split("/")[0]) / parseInt((pagados || "1/1").split("/")[1] || 1);
 
   return (
-    <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden flex flex-col p-[17px] gap-3 relative group animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_24px_rgba(0,0,0,0.08)]" style={{ fontFamily: font }}>
-      {/* Accent bar grows on hover */}
+    <div
+      className="border border-[#e4e4e0] rounded-[14px] overflow-hidden flex flex-col p-[17px] gap-3 relative group animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_24px_rgba(0,0,0,0.08)]"
+      style={{ fontFamily: font, backgroundColor: "var(--surface)" }}
+    >
       <div className="absolute top-0 left-0 right-0 h-[3px] transition-all duration-300 group-hover:h-[5px] rounded-t-[14px]" style={{ background: accent }} />
-      {/* Header */}
       <div className="flex items-start justify-between pt-1">
         <div className="flex flex-col gap-[2px]">
           <span className="text-[13px] font-black text-[#1a1a1a] leading-none">{title}</span>
@@ -454,7 +485,6 @@ export function MiniQuinielaCard({ title, league, status, pozo, pagados, partido
         </div>
         <Badge label={status} />
       </div>
-      {/* Stats grid */}
       <div className="border-t border-[#e4e4e0] pt-3 grid grid-cols-2 gap-y-2">
         {[["Pozo", pozo], ["Pagados", pagados], ["Partidos", partidos], ["Cierre", cierre]].map(([l, v]) => (
           <div key={l} className="flex flex-col gap-0.5">
@@ -463,18 +493,12 @@ export function MiniQuinielaCard({ title, league, status, pozo, pagados, partido
           </div>
         ))}
       </div>
-      {/* Progress + buttons */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-[5px] bg-[#f2f2ef] rounded-full overflow-hidden">
+          <div className="flex-1 h-[5px] rounded-full overflow-hidden" style={{ backgroundColor: "var(--surface-2)" }}>
             <div
               className="h-full rounded-full animate-bar-fill"
-              style={{
-                "--bar-target-w": `${ratio * 100}%`,
-                background: accent,
-                animationFillMode: "both",
-                animationDelay: "0.3s",
-              }}
+              style={{ "--bar-target-w": `${ratio * 100}%`, background: accent, animationFillMode: "both", animationDelay: "0.3s" }}
             />
           </div>
           <span className="text-[10px] font-bold text-[#6b6b6b]">{pagados}</span>
@@ -510,8 +534,8 @@ export function InputField({ label, placeholder, type = "text", value, onChange,
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="bg-white border border-[#e4e4e0] rounded-[8px] h-[38px] px-3 text-[13px] font-semibold text-[#1a1a1a] placeholder:text-[#aaa] outline-none focus:border-[#3dbb78] focus:ring-2 focus:ring-[#3dbb78]/20 transition-all"
-        style={{ fontFamily: font }}
+        className="border border-[#e4e4e0] rounded-[8px] h-[38px] px-3 text-[13px] font-semibold placeholder:text-[#aaa] outline-none focus:border-[#3dbb78] focus:ring-2 focus:ring-[#3dbb78]/20 transition-all"
+        style={{ fontFamily: font, backgroundColor: "var(--input-bg)", color: "var(--text)", borderColor: "var(--border)" }}
       />
     </div>
   );
@@ -525,8 +549,8 @@ export function SelectField({ label, value, onChange, options = [], className = 
       <select
         value={value}
         onChange={onChange}
-        className="bg-white border border-[#e4e4e0] rounded-[8px] h-[38px] px-3 text-[13px] font-semibold text-[#1a1a1a] outline-none focus:border-[#3dbb78] transition-all appearance-none cursor-pointer"
-        style={{ fontFamily: font }}
+        className="border rounded-[8px] h-[38px] px-3 text-[13px] font-semibold outline-none focus:border-[#3dbb78] transition-all appearance-none cursor-pointer"
+        style={{ fontFamily: font, backgroundColor: "var(--input-bg)", color: "var(--text)", borderColor: "var(--border)" }}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -541,7 +565,10 @@ export function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative z-10 bg-white rounded-t-[20px] sm:rounded-[16px] shadow-[0_-4px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_8px_60px_rgba(0,0,0,0.15)] overflow-hidden w-full sm:w-auto max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto sm:max-w-[calc(100vw-32px)]">
+      <div
+        className="relative z-10 rounded-t-[20px] sm:rounded-[16px] shadow-[0_-4px_40px_rgba(0,0,0,0.18)] sm:shadow-[0_8px_60px_rgba(0,0,0,0.22)] overflow-hidden w-full sm:w-auto max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto sm:max-w-[calc(100vw-32px)]"
+        style={{ backgroundColor: "var(--surface)" }}
+      >
         {children}
       </div>
     </div>
@@ -551,7 +578,7 @@ export function Modal({ children, onClose }) {
 // ─── TABLE ──────────────────────────────────────────────────────────────────
 export function Table({ headers, children }) {
   return (
-    <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden" style={{ fontFamily: font }}>
+    <div className="border border-[#e4e4e0] rounded-[14px] overflow-hidden" style={{ fontFamily: font, backgroundColor: "var(--surface)" }}>
       <table className="w-full">
         <thead>
           <tr className="border-b border-[#e4e4e0]">

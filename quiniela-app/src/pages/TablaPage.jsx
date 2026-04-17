@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar, MASCOT_TABLE, PrediccionesView } from "../components";
+import { Avatar } from "./PerfilPage";
 import { useStore } from "../store";
 import { quinielaService } from "../services/quinielaService";
 import { prediccionService } from "../services/quinielaService";
 
 const font = "Nunito, sans-serif";
 
-const BACK_ICON = "https://www.figma.com/api/mcp/asset/fcaed4e5-ce77-4115-abcf-7703ddfed9c6";
 
 function formatFecha(iso) {
   if (!iso) return "N/A";
@@ -66,12 +67,14 @@ export default function TablaPage() {
           imagen_fondo: q.imagen_fondo,
           pozo: formatPozo(q.pozo_acumulado),
           cierre: formatFecha(q.cierre),
+          cierreIso: q.cierre,
           partidos: String(q.partidos?.length || 0),
           matches: (q.partidos || []).filter(p => !p.cancelado).map((p, idx) => ({
             id: p.id,
             local: p.local_nombre,
             visitante: p.visitante_nombre,
             fecha: formatFecha(p.inicio),
+            inicio: p.inicio,
             ptos_local: p.ptos_local,
             ptos_visitante: p.ptos_visitante,
           })),
@@ -85,7 +88,7 @@ export default function TablaPage() {
         // Cargar estado
         try {
           const miSt = await quinielaService.miEstado(q.id);
-          if (mounted && miSt.inscrito) setEstadoPago(miSt.estado_pago || "pendiente");
+          if (mounted && miSt.inscrito) setEstadoPago(miSt.estado_pago || "sin_pago");
         } catch { /* no inscrito */ }
 
         // Cargar predicciones
@@ -103,6 +106,18 @@ export default function TablaPage() {
     cargar();
     return () => { mounted = false; };
   }, [quinielaId]);
+
+  // Poll payment status every 20s while pending so it auto-updates when admin confirms
+  useEffect(() => {
+    if (estadoPago !== "pendiente" || !quiniela) return;
+    const interval = setInterval(async () => {
+      try {
+        const miSt = await quinielaService.miEstado(quiniela.id);
+        if (miSt.inscrito) setEstadoPago(miSt.estado_pago || "sin_pago");
+      } catch { /* ignore */ }
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [estadoPago, quiniela]);
 
   const [joining, setJoining] = useState(false);
 
@@ -181,7 +196,7 @@ export default function TablaPage() {
             className="flex items-center gap-2 text-[13px] font-bold text-[#6b6b6b] hover:text-[#1a1a1a] transition-colors mb-6 animate-fade-in"
             style={{ fontFamily: font }}
           >
-            <img src={BACK_ICON} alt="" className="w-4 h-4" />
+            <ArrowLeft size={15} strokeWidth={2.5} />
             Volver
           </button>
           <h1 className="text-[26px] md:text-[30px] font-black text-[#1a1a1a] tracking-[-1px] animate-fade-in-up" style={{ fontFamily: font }}>
@@ -284,9 +299,7 @@ export default function TablaPage() {
                           {p.pos}
                         </div>
                         <div className="flex items-center gap-3 px-2">
-                          <div className="w-[26px] h-[26px] md:w-[30px] md:h-[30px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[10px] md:text-[11px] font-extrabold text-[#25854f] flex-shrink-0" style={{ fontFamily: font }}>
-                            {p.initials}
-                          </div>
+                          <Avatar foto={p.foto_perfil} iniciales={p.initials} size={28} border={2} fontSize={10} />
                           <span className="text-[13px] md:text-[14px] text-[#1a1a1a]" style={{ fontFamily: font }}>
                             {p.nombre}
                           </span>

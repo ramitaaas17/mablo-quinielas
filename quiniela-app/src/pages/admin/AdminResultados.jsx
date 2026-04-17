@@ -3,7 +3,7 @@ import { AdminLayout, TopBar, SectionHeader, Modal, IconWarning } from "../../co
 import { adminService } from "../../services/quinielaService";
 
 const font = "Nunito, sans-serif";
-const posColor = ["#f4a030", "#6b6b6b", "#b87333", "#1a1a1a"];
+const posColor = ["var(--orange)", "var(--text-2)", "var(--orange-text)", "var(--text)"];
 
 function tipoResultado(p) {
   if (p.ptos_local === null || p.ptos_visitante === null) return null;
@@ -13,9 +13,9 @@ function tipoResultado(p) {
 }
 
 const tipoColor = {
-  "Local":     { bg: "#d6f5e8", text: "#25854f" },
-  "Visitante": { bg: "#fde8d8", text: "#a05a00" },
-  "Empate":    { bg: "#f2f2ef", text: "#6b6b6b" },
+  "Local":     { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  "Visitante": { bg: "var(--orange-pale)", text: "var(--orange-text)" },
+  "Empate":    { bg: "var(--surface-2)",   text: "var(--text-2)" },
 };
 
 function estadoPartido(p) {
@@ -426,9 +426,9 @@ export default function AdminResultados({ onNavigate }) {
                             const pred = usr.predicciones?.find(pr => pr.id_partido === String(p.id));
                             const sel = pred?.selecciones?.[0] || null;
                             const correcto = pred?.es_correcta;
-                            const selColor = sel === "Local" ? { bg: "#d6f5e8", text: "#25854f" }
-                              : sel === "Visitante" ? { bg: "#fde8d8", text: "#a05a00" }
-                              : sel === "Empate" ? { bg: "#f2f2ef", text: "#6b6b6b" }
+                            const selColor = sel === "Local" ? { bg: "var(--green-pale)",  text: "var(--green-dk)" }
+                              : sel === "Visitante" ? { bg: "var(--orange-pale)", text: "var(--orange-text)" }
+                              : sel === "Empate" ? { bg: "var(--surface-2)",   text: "var(--text-2)" }
                               : null;
                             return (
                               <td key={p.id} className="px-2 py-2.5 border-b border-[#e4e4e0] text-center">
@@ -436,8 +436,8 @@ export default function AdminResultados({ onNavigate }) {
                                   <span
                                     className="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-extrabold"
                                     style={{
-                                      background: correcto === true ? "#d6f5e8" : correcto === false ? "#fee2e2" : selColor?.bg,
-                                      color: correcto === true ? "#25854f" : correcto === false ? "#b91c1c" : selColor?.text,
+                                      background: correcto === true ? "var(--green-pale)" : correcto === false ? "var(--red-pale)" : selColor?.bg,
+                                      color: correcto === true ? "var(--green-dk)" : correcto === false ? "var(--red)" : selColor?.text,
                                     }}
                                   >
                                     {sel === "Local" ? "L" : sel === "Visitante" ? "V" : "E"}
@@ -458,10 +458,10 @@ export default function AdminResultados({ onNavigate }) {
             <div className="px-6 py-4 border-t border-[#e4e4e0] flex items-center gap-4 flex-shrink-0 bg-[#fafaf8]">
               <div className="flex items-center gap-3 flex-1 flex-wrap">
                 {[
-                  { bg: "#d6f5e8", text: "#25854f", label: "Local (L)" },
-                  { bg: "#fde8d8", text: "#a05a00", label: "Visitante (V)" },
-                  { bg: "#f2f2ef", text: "#6b6b6b", label: "Empate (E)" },
-                  { bg: "#fee2e2", text: "#b91c1c", label: "Incorrecto" },
+                  { bg: "var(--green-pale)",  text: "var(--green-dk)",    label: "Local (L)" },
+                  { bg: "var(--orange-pale)", text: "var(--orange-text)", label: "Visitante (V)" },
+                  { bg: "var(--surface-2)",   text: "var(--text-2)",      label: "Empate (E)" },
+                  { bg: "var(--red-pale)",    text: "var(--red)",         label: "Incorrecto" },
                 ].map(({ bg, text, label }) => (
                   <div key={label} className="flex items-center gap-1">
                     <span className="inline-block w-4 h-4 rounded-full" style={{ background: bg }} />
@@ -487,7 +487,7 @@ export default function AdminResultados({ onNavigate }) {
             {resolverResult.error ? (
               <>
                 <div className="w-[42px] h-[42px] bg-[#fee2e2] rounded-[10px] flex items-center justify-center mb-5">
-                  <IconWarning size={20} color="#b91c1c" />
+                  <IconWarning size={20} color="var(--red)" />
                 </div>
                 <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Error al resolver</h2>
                 <p className="text-[13px] font-medium text-[#6b6b6b] mt-2">{resolverResult.error}</p>
@@ -496,7 +496,7 @@ export default function AdminResultados({ onNavigate }) {
               <>
                 <div className="w-[42px] h-[42px] bg-[#d6f5e8] rounded-[10px] flex items-center justify-center mb-5">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M10 1L13 7.5h6.5L14 12l2 6.5L10 15l-6 3.5 2-6.5L.5 7.5H7L10 1z" fill="#25854f" />
+                    <path d="M10 1L13 7.5h6.5L14 12l2 6.5L10 15l-6 3.5 2-6.5L.5 7.5H7L10 1z" fill="var(--green-dk)" />
                   </svg>
                 </div>
                 <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">¡Quiniela resuelta!</h2>

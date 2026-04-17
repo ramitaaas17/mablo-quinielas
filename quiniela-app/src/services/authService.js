@@ -25,4 +25,9 @@ export const authService = {
     const { data } = await apiClient.get('/auth/stats');
     return data;
   },
+
+  actualizarFoto: async (fotoDataUrl) => {
+    const { data } = await apiClient.patch('/auth/foto-perfil', { foto: fotoDataUrl });
+    return data;
+  },
 };

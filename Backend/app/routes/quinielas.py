@@ -153,6 +153,7 @@ def get_posiciones(id_quiniela):
             "id_usr": str(usr.id_usr),
             "nombre": usr.nombre_completo,
             "initials": initials,
+            "foto_perfil": usr.foto_perfil or None,
             "puntos_total": p.puntos_total,
             "num_partidos": num_partidos,
         })

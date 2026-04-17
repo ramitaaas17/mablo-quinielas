@@ -8,17 +8,17 @@ import { adminService } from "../../services/quinielaService";
 const font = "Nunito, sans-serif";
 
 const statusStyle = {
-  "confirmado": { bg: "#d6f5e8", text: "#25854f", label: "Pagado" },
-  "pendiente":  { bg: "#fff3e0", text: "#a05a00", label: "Pendiente" },
-  "rechazado":  { bg: "#fee2e2", text: "#b91c1c", label: "Rechazado" },
-  "sin_pago":   { bg: "#f2f2ef", text: "#6b6b6b", label: "Sin pago" },
+  "confirmado": { bg: "var(--green-pale)",  text: "var(--green-dk)",     label: "Pagado" },
+  "pendiente":  { bg: "var(--orange-pale)", text: "var(--orange-text)",  label: "Pendiente" },
+  "rechazado":  { bg: "var(--red-pale)",    text: "var(--red)",          label: "Rechazado" },
+  "sin_pago":   { bg: "var(--surface-2)",   text: "var(--text-2)",       label: "Sin pago" },
 };
 
 const avatarColors = [
-  { bg: "#d6f5e8", text: "#25854f" },
-  { bg: "#f2f2ef", text: "#1d4ed8" },
-  { bg: "#fde8d8", text: "#a05a00" },
-  { bg: "#fce8e8", text: "#7c3aed" },
+  { bg: "var(--green-pale)",  text: "var(--green-dk)" },
+  { bg: "var(--surface-2)",   text: "var(--blue-text)" },
+  { bg: "var(--orange-pale)", text: "var(--orange-text)" },
+  { bg: "var(--red-pale)",    text: "var(--purple-text)" },
 ];
 
 export default function AdminPagos({ onNavigate }) {
@@ -92,7 +92,7 @@ export default function AdminPagos({ onNavigate }) {
       {/* Stats banner */}
       <div className="bg-white border-b border-[#e4e4e0] relative overflow-hidden px-4 md:px-7 pt-7 pb-7 flex-shrink-0">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[1400px] h-[260px] rounded-b-[415px] opacity-45 pointer-events-none"
-          style={{ backgroundImage: "linear-gradient(145deg, #f2f2ef 0%, #fde8d8 40%, #d6f5e8 100%)" }} />
+          style={{ backgroundImage: "var(--hero-blob-img)" }} />
         <div className="relative z-10">
           <h1 className="text-[22px] font-black text-[#1a1a1a] tracking-[-0.6px]" style={{ fontFamily: font }}>
             Pagos — {quinielaActual?.nombre || "Selecciona una quiniela"}
@@ -164,7 +164,7 @@ export default function AdminPagos({ onNavigate }) {
                     {/* Participante */}
                     <div className="px-[18px] py-3 flex items-center gap-2.5">
                       <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[11px] font-extrabold flex-shrink-0"
-                        style={{ background: av.bg, color: av.text, boxShadow: "0 0 0 1.5px #e4e4e0" }}>
+                        style={{ background: av.bg, color: av.text, boxShadow: "0 0 0 1.5px var(--border)" }}>
                         {p.initials}
                       </div>
                       <div className="flex flex-col">
@@ -176,7 +176,7 @@ export default function AdminPagos({ onNavigate }) {
                     {/* Método */}
                     <div className="px-[18px] py-3">
                       <span className="text-[11px] font-extrabold px-2.5 py-[3px] rounded-full"
-                        style={{ background: "#f2f2ef", color: "#6b6b6b", fontFamily: font }}>
+                        style={{ background: "var(--surface-2)", color: "var(--text-2)", fontFamily: font }}>
                         {isPendiente ? "—" : (p.metodo || "—")}
                       </span>
                     </div>
@@ -248,8 +248,8 @@ export default function AdminPagos({ onNavigate }) {
               <div className="px-4 py-3 flex flex-col divide-y divide-[#e4e4e0]">
                 {[
                   { l: "Total inscritos", v: pagos.length },
-                  { l: "Confirmados", v: pagadosCount, color: "#25854f" },
-                  { l: "Pendientes", v: pendientesCount, color: "#a05a00" },
+                  { l: "Confirmados", v: pagadosCount, color: "var(--green-dk)" },
+                  { l: "Pendientes", v: pendientesCount, color: "var(--orange-text)" },
                 ].map(({ l, v, color }) => (
                   <div key={l} className="flex items-center justify-between py-2.5">
                     <span className="text-[12px] font-bold text-[#6b6b6b]">{l}</span>
@@ -267,7 +267,7 @@ export default function AdminPagos({ onNavigate }) {
         <Modal onClose={() => setConfirmTarget(null)}>
           <div className="w-full sm:w-[380px] p-5 sm:p-7" style={{ fontFamily: font }}>
             <div className="w-[42px] h-[42px] bg-[#d6f5e8] rounded-[10px] flex items-center justify-center mb-5">
-              <IconCheck size={20} color="#25854f" />
+              <IconCheck size={20} color="var(--green-dk)" />
             </div>
             <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Confirmar pago</h2>
             <p className="text-[13px] font-medium text-[#6b6b6b] mt-1 mb-5">
@@ -276,7 +276,7 @@ export default function AdminPagos({ onNavigate }) {
 
             <div className="bg-[#fafaf8] border border-[#e4e4e0] rounded-[12px] p-4 flex items-center gap-3 mb-4">
               <div className="w-[38px] h-[38px] rounded-full bg-[#d6f5e8] flex items-center justify-center text-[12px] font-extrabold flex-shrink-0"
-                style={{ color: "#25854f", boxShadow: "0 0 0 1.5px #e4e4e0" }}>
+                style={{ color: "var(--green-dk)", boxShadow: "0 0 0 1.5px var(--border)" }}>
                 {confirmTarget.initials}
               </div>
               <div className="flex-1">

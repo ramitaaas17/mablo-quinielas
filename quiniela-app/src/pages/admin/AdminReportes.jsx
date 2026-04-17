@@ -49,13 +49,13 @@ export default function AdminReportes({ onNavigate }) {
     let filename;
     if (tipo === "resultados") {
       url = adminService.getReporteCSVUrl(quinielaId);
-      filename = `${nombre}_resultados.csv`;
+      filename = `${nombre}_resultados.xlsx`;
     } else if (tipo === "pagos") {
       url = adminService.getReportePagosCSVUrl(quinielaId);
-      filename = `${nombre}_pagos.csv`;
+      filename = `${nombre}_pagos.xlsx`;
     } else if (tipo === "posiciones") {
       url = adminService.getReportePosicionesCSVUrl(quinielaId);
-      filename = `${nombre}_posiciones.csv`;
+      filename = `${nombre}_posiciones.xlsx`;
     } else if (tipo === "pdf_completo") {
       url = adminService.getReportePDFUrl(quinielaId);
       filename = `${nombre}_reporte.pdf`;
@@ -105,16 +105,16 @@ export default function AdminReportes({ onNavigate }) {
                     </div>
                     <div className="flex gap-2 flex-wrap sm:ml-auto sm:flex-shrink-0">
                       {[
-                        { label: "CSV Resultados", url: adminService.getReporteCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_resultados.csv` },
-                        { label: "CSV Pagos", url: adminService.getReportePagosCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_pagos.csv` },
-                        { label: "CSV Pos.", url: adminService.getReportePosicionesCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_posiciones.csv` },
+                        { label: "Excel Resultados", url: adminService.getReporteCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_resultados.xlsx` },
+                        { label: "Excel Pagos", url: adminService.getReportePagosCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_pagos.xlsx` },
+                        { label: "Excel Pos.", url: adminService.getReportePosicionesCSVUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_posiciones.xlsx` },
                         { label: "PDF Completo", url: adminService.getReportePDFUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_reporte.pdf` },
                         { label: "PDF Posiciones", url: adminService.getReportePosicionesPDFUrl(q.id), file: `${q.nombre.replace(/\s+/g, '_')}_posiciones.pdf` },
                       ].map(({ label, url, file }) => (
                         <button
                           key={label}
                           onClick={() => descargar(url, file)}
-                          className={`h-7 px-3 rounded-full border text-[10px] font-extrabold transition-colors ${label.startsWith('PDF') ? 'border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white' : 'border-[#e4e4e0] text-[#1a1a1a] hover:bg-[#f2f2ef]'}`}
+                          className={`h-7 px-3 rounded-full border text-[10px] font-extrabold transition-colors ${label.startsWith('PDF') ? 'border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white' : 'border-[#3dbb78] text-[#25854f] hover:bg-[#d6f5e8]'}`}
                           style={{ fontFamily: font }}
                         >
                           {label}
@@ -131,7 +131,7 @@ export default function AdminReportes({ onNavigate }) {
             <div className="bg-[#f2f2ef] rounded-[14px] p-5" style={{ fontFamily: font }}>
               <div className="text-[13px] font-bold text-[#1a1a1a] mb-1">¿Cómo funcionan los reportes?</div>
               <p className="text-[12px] text-[#6b6b6b]">
-                Los reportes CSV son compatibles con Excel y Google Sheets. Los PDFs incluyen una tabla completa de predicciones y posiciones, listos para imprimir o compartir.
+                Los reportes Excel (.xlsx) tienen formato completo: colores, columnas, medallas y badges de estado. Los PDFs incluyen encabezado de marca, cajas de estadísticas, tabla de posiciones con medallas y marcadores — listos para imprimir o compartir.
               </p>
             </div>
           </div>

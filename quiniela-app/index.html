@@ -1,13 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/iconoQuiniepicks.png" />
+    <link rel="apple-touch-icon" href="/iconoQuiniepicks.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>quiniela-app</title>
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="description" content="Quiniepicks — Crea y gestiona quinielas deportivas con tus amigos." />
+    <meta name="application-name" content="Quiniepicks" />
+    <meta property="og:title" content="Quiniepicks" />
+    <meta property="og:description" content="Crea y gestiona quinielas deportivas con tus amigos." />
+    <meta property="og:type" content="website" />
+    <title>Quiniepicks</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Prevent flash of wrong theme on load -->
+    <script>
+      (function(){
+        var t=localStorage.getItem('qp-theme')||'light';
+        if(t==='dark') document.documentElement.setAttribute('data-theme','dark');
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -27,14 +27,18 @@ export function InputField({
         onChange={onChange}
         onKeyDown={onKeyDown}
         className={cn(
-          "bg-white border rounded-[10px] h-11 px-4 text-[14.5px] font-semibold text-[#1a1a1a]",
+          "border rounded-[10px] h-11 px-4 text-[14.5px] font-semibold",
           "placeholder:text-[#a0a09c] outline-none transition-all duration-200 w-full",
           "focus:ring-[3px] focus:scale-[1.01]",
           error
-            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50/50"
+            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
             : "border-[#e0e0dc] focus:border-[#3dbb78] focus:ring-[#3dbb78]/20"
         )}
-        style={{ fontFamily: "Nunito, sans-serif" }}
+        style={{
+          fontFamily: "Nunito, sans-serif",
+          backgroundColor: "var(--input-bg)",
+          color: "var(--text)",
+        }}
       />
       {error && helperText && (
         <span
@@ -75,14 +79,18 @@ export function PrimaryButton({ children, onClick, className = "", type = "butto
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "bg-[#1a1a1a] text-white font-extrabold text-[15px] h-12 rounded-full w-full transition-all duration-200 inline-flex items-center justify-center",
+        "font-extrabold text-[15px] h-12 rounded-full w-full transition-all duration-200 inline-flex items-center justify-center",
         "active:scale-[0.97]",
         disabled
           ? "opacity-60 cursor-not-allowed"
-          : "hover:bg-[#25854f] hover:shadow-xl hover:shadow-[#3dbb78]/30 hover:-translate-y-[1px]",
+          : "hover:shadow-xl hover:shadow-[#3dbb78]/30 hover:-translate-y-[1px]",
         className
       )}
-      style={{ fontFamily: "Nunito, sans-serif" }}
+      style={{
+        fontFamily: "Nunito, sans-serif",
+        backgroundColor: "var(--btn-bg)",
+        color: "var(--btn-text)",
+      }}
     >
       {isLoading ? (
         <span className="inline-flex items-center">
