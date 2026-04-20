@@ -4,6 +4,7 @@ import {
   Badge, Modal, InputField, SelectField, IconWarning, IconCheck
 } from "../../components/admin/index.jsx";
 import { adminService } from "../../services/quinielaService";
+import { Avatar } from "../PerfilPage";
 
 const font = "Nunito, sans-serif";
 
@@ -154,7 +155,6 @@ export default function AdminPagos({ onNavigate }) {
               )}
 
               {!loading && pagos.map((p, i) => {
-                const av = avatarColors[i % avatarColors.length];
                 const ss = statusStyle[p.estado] || statusStyle["sin_pago"];
                 const isPagado   = p.estado === "confirmado";
                 const isPendiente = p.estado === "pendiente";
@@ -163,10 +163,7 @@ export default function AdminPagos({ onNavigate }) {
                     className={`grid grid-cols-[2fr_1fr_1fr_1.5fr] border-b border-[#e4e4e0] last:border-b-0 items-center ${isPendiente ? "bg-[#fffdf5]" : ""}`}>
                     {/* Participante */}
                     <div className="px-[18px] py-3 flex items-center gap-2.5">
-                      <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[11px] font-extrabold flex-shrink-0"
-                        style={{ background: av.bg, color: av.text, boxShadow: "0 0 0 1.5px var(--border)" }}>
-                        {p.initials}
-                      </div>
+                      <Avatar foto={p.foto_perfil} iniciales={p.initials} size={34} border={1.5} fontSize={11} />
                       <div className="flex flex-col">
                         <span className="text-[14px] font-bold text-[#1a1a1a] leading-none" style={{ fontFamily: font }}>{p.nombre}</span>
                         <span className="text-[11px] font-semibold text-[#6b6b6b] mt-0.5" style={{ fontFamily: font }}>{p.correo}</span>

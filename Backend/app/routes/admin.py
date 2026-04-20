@@ -129,6 +129,7 @@ def _format_pago(pg):
         "nombre": usr.nombre_completo if usr else "",
         "correo": usr.correo if usr else "",
         "initials": _initials(usr.nombre_completo) if usr else "??",
+        "foto_perfil": usr.foto_perfil if usr else None,
         "monto": float(pg.monto),
         "metodo": pg.metodo,
         "estado": pg.estado,

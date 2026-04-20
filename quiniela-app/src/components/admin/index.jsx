@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore } from "../../store";
+import { adminService } from "../../services/quinielaService";
 
 // Inline sun/moon icons — avoid adding a lucide-react import to this file
 function IconSun({ size = 14 }) {
@@ -199,7 +200,7 @@ const NAV_ITEMS = [
   { id: "reportes",       label: "Reportes",      Icon: IconReport,  section: "quinielas" },
 ];
 
-export function Sidebar({ active, onNavigate, onClose, collapsed, onToggleCollapse }) {
+export function Sidebar({ active, onNavigate, onClose, collapsed, onToggleCollapse, pendingPagos = 0 }) {
   const { theme, toggleTheme } = useStore();
   const isDark = theme === 'dark';
 
@@ -262,7 +263,7 @@ export function Sidebar({ active, onNavigate, onClose, collapsed, onToggleCollap
                       opacity={isActive ? 1 : 0.65}
                     />
                   </button>
-                  {item.badge && !isActive && (
+                  {item.badge && !isActive && pendingPagos > 0 && (
                     <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] rounded-full bg-[#f4a030] pointer-events-none">
                       <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
                     </span>
@@ -295,7 +296,7 @@ export function Sidebar({ active, onNavigate, onClose, collapsed, onToggleCollap
                       opacity={isActive ? 1 : 0.5}
                     />
                     <span className="flex-1 text-left">{item.label}</span>
-                    {item.badge && !isActive && (
+                    {item.badge && !isActive && pendingPagos > 0 && (
                       <span className="relative flex-shrink-0 w-[6px] h-[6px]">
                         <span className="w-[6px] h-[6px] rounded-full bg-[#f4a030] block relative z-10" />
                         <span className="absolute inset-0 rounded-full bg-[#f4a030] animate-ping opacity-75" />
@@ -495,6 +496,20 @@ export function AdminLayout({ active, onNavigate, children }) {
     try { return localStorage.getItem("admin-sidebar-collapsed") === "true"; }
     catch { return false; }
   });
+  const [pendingPagos, setPendingPagos] = useState(0);
+  const pollRef = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchPending = () => {
+      adminService.getStats().then(s => {
+        if (mounted) setPendingPagos(s?.pagos_pendientes || 0);
+      }).catch(() => {});
+    };
+    fetchPending();
+    pollRef.current = setInterval(fetchPending, 60_000);
+    return () => { mounted = false; clearInterval(pollRef.current); };
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => {
@@ -525,6 +540,7 @@ export function AdminLayout({ active, onNavigate, children }) {
           onNavigate={onNavigate}
           collapsed={sidebarCollapsed}
           onToggleCollapse={toggleSidebar}
+          pendingPagos={pendingPagos}
         />
       </div>
 
@@ -547,6 +563,7 @@ export function AdminLayout({ active, onNavigate, children }) {
           onNavigate={onNavigate}
           onClose={() => setDrawerOpen(false)}
           collapsed={false}
+          pendingPagos={pendingPagos}
         />
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { useStore } from "../store";
 import { cn } from "../utils/cn";
@@ -136,6 +136,7 @@ function BellIcon({ size = 16 }) {
 
 export function Navbar({ showWeek = false, variant = "app" }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { user, logout, theme, toggleTheme } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reglasOpen, setReglasOpen] = useState(false);
@@ -266,8 +267,9 @@ export function Navbar({ showWeek = false, variant = "app" }) {
             {user && (
               <div className="relative">
                 <button
+                  onClick={() => navigate("/mis-quinielas")}
                   className="w-[32px] h-[32px] rounded-full flex items-center justify-center border border-[#e4e4e0] bg-[#f2f2ef] hover:bg-[#e4e4e0] transition-colors text-[#6b6b6b]"
-                  title={notifCount > 0 ? `${notifCount} notificación${notifCount > 1 ? 'es' : ''} pendiente${notifCount > 1 ? 's' : ''}` : "Sin notificaciones"}
+                  title={notifCount > 0 ? `${notifCount} pago${notifCount > 1 ? 's' : ''} pendiente${notifCount > 1 ? 's' : ''}` : "Sin notificaciones"}
                 >
                   <BellIcon size={14} />
                 </button>
