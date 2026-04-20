@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navbar, StatCard, QuinielaCard, SectionHeader, CardSkeleton } from "../components";
+import { Navbar, StatCard, QuinielaCard, SectionHeader, CardSkeleton, MASCOT_DASHBOARD } from "../components";
 import { authService } from "../services/authService";
 import { useStore } from "../store";
 
@@ -248,11 +248,18 @@ export default function MisQuinielasPage() {
 
       {/* Hero */}
       <div className="relative bg-white border-b border-[#e4e4e0] overflow-hidden animate-fade-in">
-        <div
-          className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[200%] sm:w-[1400px] h-[300px] sm:h-[280px] rounded-b-[40%] sm:rounded-b-[420px] pointer-events-none animate-breathe"
-          style={{ backgroundImage: "var(--hero-blob-img)", opacity: 0.5 }}
+        <img
+          src={MASCOT_DASHBOARD}
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover object-right sm:object-center pointer-events-none"
         />
-        <div className="relative z-10 px-6 sm:px-10 lg:px-[90px] pt-8 lg:pt-[44px] pb-10">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: "var(--hero-fade-r)" }}
+        />
+        <div className="relative z-10 px-6 sm:px-10 lg:px-[90px] pt-8 lg:pt-14 pb-10 xl:pb-14">
           <h1
             className="text-[28px] sm:text-[34px] font-black text-[#1a1a1a] tracking-[-1px] animate-fade-in-up"
             style={{ fontFamily: font }}
@@ -266,7 +273,7 @@ export default function MisQuinielasPage() {
             Historial y estado de todas tus participaciones.
           </p>
 
-          <div className="flex gap-3 sm:gap-4 mt-6 flex-wrap">
+          <div className="flex gap-3 sm:gap-4 mt-8 flex-wrap lg:pr-64">
             {[
               { label: "Participaciones", value: String(misQuinielas.length), sub: "en total" },
               { label: "Activas",          value: String(activeQ.length),     sub: "ahora mismo" },

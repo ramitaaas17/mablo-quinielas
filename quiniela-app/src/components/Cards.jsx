@@ -95,22 +95,34 @@ export function Badge({ status }) {
 }
 
 /* ── AvatarStack ──────────────────────────────────────────────────── */
-export function AvatarStack({ initials = [], extra = 0 }) {
+const API_ORIGIN = (typeof import.meta !== 'undefined' ? (import.meta.env?.VITE_API_URL || '') : '').replace(/\/api$/, '');
+
+export function AvatarStack({ initials = [], photos = [], extra = 0 }) {
   return (
     <div className="flex items-center">
-      {initials.map((ini, i) => (
-        <div
-          key={i}
-          className="w-[24px] h-[24px] sm:w-[26px] sm:h-[26px] rounded-full bg-[#d6f5e8] border-2 border-white flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold text-[#25854f] -ml-[6px] first:ml-0 shadow-sm transition-transform hover:scale-125 hover:z-10 relative"
-          style={{ fontFamily: "Nunito, sans-serif", animationDelay: `${i * 50}ms` }}
-        >
-          {ini}
-        </div>
-      ))}
+      {initials.map((ini, i) => {
+        const rawFoto = photos[i];
+        const fotoUrl = rawFoto ? (rawFoto.startsWith('http') ? rawFoto : `${API_ORIGIN}${rawFoto}`) : null;
+        return (
+          <div
+            key={i}
+            className="w-[24px] h-[24px] sm:w-[26px] sm:h-[26px] rounded-full border-2 border-white -ml-[6px] first:ml-0 shadow-sm transition-transform hover:scale-125 hover:z-10 relative overflow-hidden flex-shrink-0"
+            style={{ backgroundColor: "var(--green-pale)" }}
+          >
+            {fotoUrl ? (
+              <img src={fotoUrl} alt={ini} className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display='none'; }} />
+            ) : (
+              <span className="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold" style={{ color: "var(--green-dk)", fontFamily: "Nunito, sans-serif" }}>
+                {ini}
+              </span>
+            )}
+          </div>
+        );
+      })}
       {extra > 0 && (
         <div
-          className="w-[24px] h-[24px] sm:w-[26px] sm:h-[26px] rounded-full bg-[#f2f2ef] border-2 border-white flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold text-[#6b6b6b] -ml-[6px] shadow-sm relative"
-          style={{ fontFamily: "Nunito, sans-serif" }}
+          className="w-[24px] h-[24px] sm:w-[26px] sm:h-[26px] rounded-full border-2 border-white flex items-center justify-center text-[9px] sm:text-[10px] font-extrabold -ml-[6px] shadow-sm relative"
+          style={{ backgroundColor: "var(--surface-2)", color: "var(--text-2)", fontFamily: "Nunito, sans-serif" }}
         >
           +{extra}
         </div>
@@ -144,7 +156,7 @@ const accentColors = {
 /* ── QuinielaCard ─────────────────────────────────────────────────── */
 export function QuinielaCard({
   title, league, status = "abierta", pozo, entrada, partidos, cierre,
-  players = [], extraPlayers = 0, buttonLabel = "Ver quiniela",
+  players = [], photos = [], extraPlayers = 0, buttonLabel = "Ver quiniela",
   accentColor = "green", onButtonClick, resolved = false,
   ganador, posicion, puntos, pague, misPoints,
 }) {
@@ -204,7 +216,7 @@ export function QuinielaCard({
         </div>
 
         <div className="flex items-center justify-between mt-auto pt-2">
-          <AvatarStack initials={players} extra={extraPlayers} />
+          <AvatarStack initials={players} photos={photos} extra={extraPlayers} />
           <button
             onClick={onButtonClick}
             className={cn(

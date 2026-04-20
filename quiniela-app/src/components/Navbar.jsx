@@ -134,7 +134,7 @@ function BellIcon({ size = 16 }) {
   );
 }
 
-export function Navbar({ showWeek = false, variant = "app" }) {
+export function Navbar({ variant = "app" }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout, theme, toggleTheme } = useStore();
@@ -142,22 +142,39 @@ export function Navbar({ showWeek = false, variant = "app" }) {
   const [reglasOpen, setReglasOpen] = useState(false);
   const [openCount, setOpenCount] = useState(0);
   const [notifCount, setNotifCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [userFoto, setUserFoto] = useState(null);
   const notifRef = useRef(null);
+  const bellRef = useRef(null);
   const isDark = theme === 'dark';
 
-  // Poll notificaciones para usuarios autenticados
+  // Poll notificaciones y carga foto de perfil
   useEffect(() => {
-    if (!user) { setNotifCount(0); return; }
+    if (!user) { setNotifCount(0); setUserFoto(null); return; }
     let mounted = true;
     const fetchNotif = () => {
       authService.notificaciones().then(d => {
         if (mounted) setNotifCount(d.count || 0);
       }).catch(() => {});
     };
+    // Cargar foto de perfil una sola vez
+    authService.perfil().then(p => {
+      if (mounted && p?.foto_perfil) setUserFoto(p.foto_perfil);
+    }).catch(() => {});
     fetchNotif();
     notifRef.current = setInterval(fetchNotif, 60_000);
     return () => { mounted = false; clearInterval(notifRef.current); };
   }, [user]);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e) => {
+      if (bellRef.current && !bellRef.current.contains(e.target)) setNotifOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [notifOpen]);
 
   const activeLink = pathname.substring(1) || "inicio";
 
@@ -265,18 +282,57 @@ export function Navbar({ showWeek = false, variant = "app" }) {
           <div className="hidden md:flex items-center gap-3 z-50">
             {/* Notification bell */}
             {user && (
-              <div className="relative">
+              <div className="relative" ref={bellRef}>
                 <button
-                  onClick={() => navigate("/mis-quinielas")}
+                  onClick={() => setNotifOpen(o => !o)}
                   className="w-[32px] h-[32px] rounded-full flex items-center justify-center border border-[#e4e4e0] bg-[#f2f2ef] hover:bg-[#e4e4e0] transition-colors text-[#6b6b6b]"
                   title={notifCount > 0 ? `${notifCount} pago${notifCount > 1 ? 's' : ''} pendiente${notifCount > 1 ? 's' : ''}` : "Sin notificaciones"}
                 >
                   <BellIcon size={14} />
                 </button>
                 {notifCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center bg-[#d93025] text-white text-[9px] font-black rounded-full px-[3px] leading-none">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center bg-[#d93025] text-white text-[9px] font-black rounded-full px-[3px] leading-none pointer-events-none">
                     {notifCount > 9 ? "9+" : notifCount}
                   </span>
+                )}
+                {/* Dropdown panel */}
+                {notifOpen && (
+                  <div
+                    className="absolute right-0 top-[calc(100%+8px)] w-[260px] rounded-[14px] border border-[#e4e4e0] shadow-xl overflow-hidden animate-fade-in-up z-[100]"
+                    style={{ backgroundColor: "var(--surface)", fontFamily: "Nunito, sans-serif" }}
+                  >
+                    <div className="px-4 py-3 border-b border-[#e4e4e0]">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider" style={{ color: "var(--text-2)" }}>Notificaciones</span>
+                    </div>
+                    <div className="px-4 py-3">
+                      {notifCount > 0 ? (
+                        <>
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--orange-pale)" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                            </span>
+                            <p className="text-[13px] font-bold leading-tight" style={{ color: "var(--text)" }}>
+                              {notifCount} pago{notifCount > 1 ? 's' : ''} pendiente{notifCount > 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <p className="text-[11px] font-medium mb-3" style={{ color: "var(--text-2)" }}>
+                            Tienes pagos sin confirmar. Ve a tus quinielas para más detalles.
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-[13px] font-medium py-1" style={{ color: "var(--text-2)" }}>
+                          Sin notificaciones pendientes.
+                        </p>
+                      )}
+                      <button
+                        onClick={() => { setNotifOpen(false); navigate("/mis-quinielas"); }}
+                        className="w-full h-8 rounded-full text-[12px] font-extrabold transition-colors"
+                        style={{ backgroundColor: "var(--btn-bg)", color: "var(--btn-text)" }}
+                      >
+                        Mis quinielas
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -290,26 +346,20 @@ export function Navbar({ showWeek = false, variant = "app" }) {
                 ? <Sun size={14} strokeWidth={2} color="#f4a030" />
                 : <Moon size={14} strokeWidth={2} color="#6b6b6b" />}
             </button>
-            {variant === "app" && showWeek && (
-              <span
-                className="border border-[#e4e4e0] rounded-full px-3 h-[25px] flex items-center gap-1.5 text-[11px] font-extrabold text-[#6b6b6b]"
-                style={{ fontFamily: "Nunito, sans-serif" }}
-              >
-                <span className="relative flex-shrink-0 w-[7px] h-[7px]">
-                  <span className="w-[7px] h-[7px] rounded-full bg-[#3dbb78] block relative z-10" />
-                  <span className="absolute inset-0 rounded-full bg-[#3dbb78] animate-ping opacity-60" />
-                </span>
-                Semana 12
-              </span>
-            )}
             {user ? (
               <button
                 onClick={logout}
-                className="w-[36px] h-[36px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[13px] font-extrabold text-[#25854f] transition-all duration-200 hover:scale-110 hover:shadow-md hover:shadow-[#3dbb78]/30"
-                style={{ fontFamily: "Nunito, sans-serif" }}
+                className="w-[36px] h-[36px] rounded-full flex-shrink-0 overflow-hidden border-2 border-[#3dbb78] transition-all duration-200 hover:scale-110 hover:shadow-md hover:shadow-[#3dbb78]/30"
                 title="Cerrar Sesión"
+                style={!userFoto ? { backgroundColor: "var(--green-pale)" } : {}}
               >
-                {user.nombre.charAt(0) || "U"}
+                {userFoto ? (
+                  <img src={userFoto.startsWith('http') ? userFoto : `${(import.meta.env.VITE_API_URL || '').replace(/\/api$/, '')}${userFoto}`} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display='none'; }} />
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center text-[13px] font-extrabold" style={{ color: "var(--green-dk)", fontFamily: "Nunito, sans-serif" }}>
+                    {user.nombre.charAt(0) || "U"}
+                  </span>
+                )}
               </button>
             ) : (
               <Link
@@ -394,11 +444,14 @@ export function Navbar({ showWeek = false, variant = "app" }) {
                 style={{ animationDelay: `${links.length * 60 + 60}ms`, backgroundColor: "var(--surface-2)" }}
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-[40px] h-[40px] rounded-full bg-[#d6f5e8] border-2 border-[#3dbb78] flex items-center justify-center text-[15px] font-extrabold text-[#25854f]"
-                    style={{ fontFamily: "Nunito, sans-serif" }}
-                  >
-                    {user.nombre.charAt(0)}
+                  <div className="w-[40px] h-[40px] rounded-full border-2 border-[#3dbb78] overflow-hidden flex-shrink-0" style={!userFoto ? { backgroundColor: "var(--green-pale)" } : {}}>
+                    {userFoto ? (
+                      <img src={userFoto.startsWith('http') ? userFoto : `${(import.meta.env.VITE_API_URL || '').replace(/\/api$/, '')}${userFoto}`} alt="" className="w-full h-full object-cover" onError={e => { e.target.style.display='none'; }} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[15px] font-extrabold" style={{ color: "var(--green-dk)", fontFamily: "Nunito, sans-serif" }}>
+                        {user.nombre.charAt(0)}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <p className="text-[14px] font-bold text-[#1a1a1a]" style={{ fontFamily: "Nunito, sans-serif" }}>

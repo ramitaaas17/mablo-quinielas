@@ -30,6 +30,7 @@ function mapQuiniela(q) {
     partidos: String(q.num_partidos),
     cierre: formatFecha(q.cierre),
     players: q.jugadores_initials || [],
+    photos: q.jugadores_fotos || [],
     extraPlayers: q.jugadores_extra || 0,
     accentColor: "green",
   };

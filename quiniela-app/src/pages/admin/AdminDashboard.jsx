@@ -4,6 +4,7 @@ import {
   MiniQuinielaCard, IconPlus,
 } from "../../components/admin/index.jsx";
 import { adminService } from "../../services/quinielaService";
+import { Avatar } from "../PerfilPage";
 
 const font = "Nunito, sans-serif";
 
@@ -206,10 +207,7 @@ export default function AdminDashboard({ onNavigate }) {
                       >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-[30px] h-[30px] rounded-full bg-[#d6f5e8] flex items-center justify-center text-[10px] font-extrabold flex-shrink-0"
-                              style={{ color: "var(--green-dk)", boxShadow: "0 0 0 1.5px var(--border)" }}>
-                              {r.initials}
-                            </div>
+                            <Avatar foto={r.foto_perfil} iniciales={r.initials} size={30} border={1.5} fontSize={10} />
                             <span className="text-[12px] font-extrabold text-[#1a1a1a] whitespace-nowrap">{r.usuario}</span>
                           </div>
                         </td>

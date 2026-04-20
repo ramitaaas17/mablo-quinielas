@@ -11,15 +11,17 @@ def _format_quiniela_list(q):
     num_partidos = Partido.query.filter_by(id_quiniela=q.id_quiniela, cancelado=False).count()
     num_jugadores = UsuarioQuiniela.query.filter_by(id_quiniela=q.id_quiniela).count()
 
-    # Primeras 3 iniciales de jugadores
+    # Primeras 3 iniciales y fotos de jugadores
     participaciones = UsuarioQuiniela.query.filter_by(id_quiniela=q.id_quiniela).limit(3).all()
     initials = []
+    fotos = []
     for p in participaciones:
         usr = Usuario.query.get(p.id_usr)
         if usr:
             partes = usr.nombre_completo.split()
             ini = ''.join(x[0].upper() for x in partes[:2] if x)
             initials.append(ini)
+            fotos.append(usr.foto_perfil or None)
 
     extra = max(0, num_jugadores - 3)
 
@@ -38,6 +40,7 @@ def _format_quiniela_list(q):
         "num_partidos": num_partidos,
         "num_jugadores": num_jugadores,
         "jugadores_initials": initials,
+        "jugadores_fotos": fotos,
         "jugadores_extra": extra,
     }
 
