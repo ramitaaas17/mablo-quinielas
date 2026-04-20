@@ -241,19 +241,19 @@ export default function AdminPagos({ onNavigate }) {
               </span>
             </div>
 
-            <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden p-px" style={{ fontFamily: font }}>
-              <div className="border-b border-[#e4e4e0] px-4 py-3">
-                <span className="text-[12px] font-extrabold text-[#1a1a1a]">Resumen de pagos</span>
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[14px] overflow-hidden p-px" style={{ fontFamily: font }}>
+              <div className="border-b border-[var(--border)] px-4 py-3 bg-[var(--surface-3)]">
+                <span className="text-[12px] font-extrabold text-[var(--text)]">Resumen de pagos</span>
               </div>
-              <div className="px-4 py-3 flex flex-col divide-y divide-[#e4e4e0]">
+              <div className="px-4 py-3 flex flex-col divide-y divide-[var(--border)]">
                 {[
                   { l: "Total inscritos", v: pagos.length },
                   { l: "Confirmados", v: pagadosCount, color: "var(--green-dk)" },
                   { l: "Pendientes", v: pendientesCount, color: "var(--orange-text)" },
                 ].map(({ l, v, color }) => (
                   <div key={l} className="flex items-center justify-between py-2.5">
-                    <span className="text-[12px] font-bold text-[#6b6b6b]">{l}</span>
-                    <span className="text-[13px] font-extrabold" style={{ color: color || "#1a1a1a" }}>{v}</span>
+                    <span className="text-[12px] font-bold text-[var(--text-2)]">{l}</span>
+                    <span className="text-[13px] font-extrabold" style={{ color: color || "var(--text)" }}>{v}</span>
                   </div>
                 ))}
               </div>

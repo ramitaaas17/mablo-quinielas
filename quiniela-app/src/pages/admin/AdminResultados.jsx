@@ -324,9 +324,9 @@ export default function AdminResultados({ onNavigate }) {
               </div>
 
               {/* Resumen financiero */}
-              <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden p-px" style={{ fontFamily: font }}>
-                <div className="border-b border-[#e4e4e0] px-4 py-3">
-                  <span className="text-[12px] font-extrabold text-[#1a1a1a]">Resumen financiero</span>
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[14px] overflow-hidden p-px" style={{ fontFamily: font }}>
+                <div className="border-b border-[var(--border)] px-4 py-3 bg-[var(--surface-3)]">
+                  <span className="text-[12px] font-extrabold text-[var(--text)]">Resumen financiero</span>
                 </div>
                 <div className="px-4 py-3 flex flex-col">
                   {[
@@ -334,9 +334,9 @@ export default function AdminResultados({ onNavigate }) {
                     ["Total recaudado",      `$${(quiniela.pozo_acumulado || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`],
                     ["Premio (tras comisión)", `$${((quiniela.pozo_acumulado || 0) * (1 - (quiniela.comision || 0) / 100)).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`],
                   ].map(([l, v]) => (
-                    <div key={l} className="flex justify-between items-center py-2 border-t border-[#e4e4e0] first:border-0">
-                      <span className="text-[12px] font-bold text-[#6b6b6b]">{l}</span>
-                      <span className="text-[13px] font-extrabold text-[#1a1a1a]">{v}</span>
+                    <div key={l} className="flex justify-between items-center py-2 border-t border-[var(--border)] first:border-0">
+                      <span className="text-[12px] font-bold text-[var(--text-2)]">{l}</span>
+                      <span className="text-[13px] font-extrabold text-[var(--text)]">{v}</span>
                     </div>
                   ))}
                 </div>

@@ -110,10 +110,10 @@ def create_app():
     from .routes.predicciones import predicciones_bp
     from .routes.admin import admin_bp
 
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(quinielas_bp, url_prefix="/quinielas")
-    app.register_blueprint(predicciones_bp, url_prefix="/predicciones")
-    app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(quinielas_bp, url_prefix="/api/quinielas")
+    app.register_blueprint(predicciones_bp, url_prefix="/api/predicciones")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
 
     # ── Health check ──────────────────────────────────────────────────────────
     @app.route("/", methods=["GET"])

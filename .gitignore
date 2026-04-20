@@ -13,3 +13,17 @@ uploads/*.jpg
 uploads/*.png
 uploads/*.webp
 Backend/setup_admin.py
+
+# ── Reglas Estrictas de Seguridad ──
+# 1. Llaves SSH privadas de servidores Web/Cloud
+*.pem
+*.ppk
+
+# 2. Variables de entorno globales (protegiendo claves secretas)
+.env*
+
+# 3. Bases de datos sqlite o volcados crudos
+*.db
+*.sqlite
+*.sqlite3
+*.bak

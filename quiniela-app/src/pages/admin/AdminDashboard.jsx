@@ -213,20 +213,20 @@ export default function AdminDashboard({ onNavigate }) {
           {/* Right column */}
           <div className="flex flex-col gap-3.5">
             {/* Resumen financiero */}
-            <div className="border border-[#e4e4e0] rounded-[14px] overflow-hidden p-px" style={{ backgroundColor: "var(--surface)" }}>
-              <div className="border-b border-[#e4e4e0] px-4 py-3">
-                <span className="text-[12px] font-extrabold text-[#1a1a1a]" style={{ fontFamily: font }}>Resumen</span>
+            <div className="border border-[var(--border)] rounded-[14px] overflow-hidden p-px" style={{ backgroundColor: "var(--surface)" }}>
+              <div className="border-b border-[var(--border)] px-4 py-3 bg-[var(--surface-3)]">
+                <span className="text-[12px] font-extrabold text-[var(--text)]" style={{ fontFamily: font }}>Resumen</span>
               </div>
-              <div className="px-4 py-3 flex flex-col" style={{ fontFamily: font }}>
+              <div className="px-4 py-3 flex flex-col bg-[var(--surface)]" style={{ fontFamily: font }}>
                 {[
                   { l: "Usuarios", v: String(s.total_usuarios || 0) },
                   { l: "Pagos confirmados", v: String(s.pagos_confirmados || 0) },
                   { l: "Pagos pendientes", v: String(s.pagos_pendientes || 0), color: "var(--orange)" },
                   { l: "Quinielas activas", v: String(s.quinielas_activas || 0) },
                 ].map(({ l, v, color }) => (
-                  <div key={l} className="flex justify-between items-center py-2 border-b border-[#e4e4e0] last:border-0">
-                    <span className="text-[12px] font-bold text-[#6b6b6b]">{l}</span>
-                    <span className="text-[13px] font-extrabold" style={{ color: color || "#1a1a1a" }}>{v}</span>
+                  <div key={l} className="flex justify-between items-center py-2 border-b border-[var(--border)] last:border-0">
+                    <span className="text-[12px] font-bold text-[var(--text-2)]">{l}</span>
+                    <span className="text-[13px] font-extrabold" style={{ color: color || "var(--text)" }}>{v}</span>
                   </div>
                 ))}
               </div>
