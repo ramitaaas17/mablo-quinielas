@@ -167,25 +167,41 @@ def get_stats():
 @admin_bp.route('/actividad', methods=['GET'])
 @admin_required
 def get_actividad():
-    # Últimas 20 predicciones
-    preds = Prediccion.query.order_by(Prediccion.fecha.desc()).limit(20).all()
-    # Últimos 20 pagos
-    pagos = Pago.query.order_by(Pago.fecha_pago.desc()).limit(20).all()
+    # Predicciones: agrupar por (user, quiniela) para no mostrar una fila por predicción
+    preds_rows = (
+        db.session.query(Prediccion.id_usr, Prediccion.fecha, Partido.id_quiniela)
+        .join(Partido, Prediccion.id_partido == Partido.id_partido)
+        .order_by(Prediccion.fecha.desc())
+        .limit(500)
+        .all()
+    )
+
+    # Agrupar: una fila por (usuario, quiniela)
+    grupos = {}  # (user_id, quiniela_id) -> { count, latest }
+    for id_usr, fecha, id_quiniela in preds_rows:
+        key = (str(id_usr), str(id_quiniela))
+        if key not in grupos:
+            grupos[key] = {"count": 0, "latest": fecha}
+        grupos[key]["count"] += 1
+        if fecha > grupos[key]["latest"]:
+            grupos[key]["latest"] = fecha
 
     actividad = []
-    for p in preds:
-        usr = Usuario.query.get(p.id_usr)
-        partido = Partido.query.get(p.id_partido)
-        quiniela = Quiniela.query.get(partido.id_quiniela) if partido else None
-        if usr:
+    for (user_id, quiniela_id), v in grupos.items():
+        usr = Usuario.query.get(user_id)
+        quiniela = Quiniela.query.get(quiniela_id)
+        if usr and quiniela:
             actividad.append({
                 "tipo": "Predicción",
                 "usuario": usr.nombre_completo,
                 "initials": _initials(usr.nombre_completo),
-                "quiniela": quiniela.nombre if quiniela else "",
-                "fecha": p.fecha.isoformat(),
+                "quiniela": quiniela.nombre,
+                "fecha": v["latest"].isoformat(),
+                "count": v["count"],
             })
 
+    # Pagos
+    pagos = Pago.query.order_by(Pago.fecha_pago.desc()).limit(20).all()
     for pg in pagos:
         usr = Usuario.query.get(pg.id_usr)
         quiniela = Quiniela.query.get(pg.id_quiniela)
@@ -196,10 +212,11 @@ def get_actividad():
                 "initials": _initials(usr.nombre_completo),
                 "quiniela": quiniela.nombre if quiniela else "",
                 "fecha": pg.fecha_pago.isoformat(),
+                "count": 1,
             })
 
     actividad.sort(key=lambda x: x['fecha'], reverse=True)
-    return jsonify(actividad[:20]), 200
+    return jsonify(actividad[:15]), 200
 
 
 # ─── QUINIELAS ────────────────────────────────────────────────────────────────
@@ -314,6 +331,20 @@ def cerrar_quiniela(id_quiniela):
     q.estado = 'cerrada'
     db.session.commit()
     return jsonify({"mensaje": "Quiniela cerrada"}), 200
+
+
+@admin_bp.route('/quinielas/<id_quiniela>', methods=['DELETE'])
+@admin_required
+def eliminar_quiniela(id_quiniela):
+    q = Quiniela.query.get_or_404(id_quiniela)
+    try:
+        db.session.delete(q)
+        db.session.commit()
+        audit_logger.info("admin elimino quiniela %s (%s)", id_quiniela, q.nombre)
+        return jsonify({"mensaje": "Quiniela eliminada definitivamente"}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Error al eliminar quiniela"}), 500
 
 
 @admin_bp.route('/quinielas/<id_quiniela>/partidos', methods=['POST'])

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { useStore } from "../store";
 import { cn } from "../utils/cn";
+import { authService } from "../services/authService";
 
 export const NAV_LOGO = "/iconoQuiniepicks.png";
 
@@ -60,17 +61,17 @@ function ReglasModal({ onClose }) {
 
       {/* Panel */}
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="relative rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
-        style={{ fontFamily: "Nunito, sans-serif" }}
+        style={{ fontFamily: "Nunito, sans-serif", backgroundColor: "var(--surface)" }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#e4e4e0] px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 border-b border-[#e4e4e0] px-6 py-4 flex items-center justify-between rounded-t-2xl z-10" style={{ backgroundColor: "var(--surface)" }}>
           <div className="flex items-center gap-3">
             <img src={NAV_LOGO} alt="logo" style={{ width: 44, height: 44, objectFit: "contain" }} />
             <div>
-              <p className="text-[11px] font-bold text-[#3dbb78] uppercase tracking-widest leading-none">Quiniepicks</p>
-              <h2 className="text-[18px] font-black text-[#1a1a1a] leading-tight">Cómo funciona</h2>
+              <p className="text-[11px] font-bold uppercase tracking-widest leading-none" style={{ color: "var(--green)" }}>Quiniepicks</p>
+              <h2 className="text-[18px] font-black leading-tight" style={{ color: "var(--text)" }}>Cómo funciona</h2>
             </div>
           </div>
           <button
@@ -85,24 +86,24 @@ function ReglasModal({ onClose }) {
         <div className="px-6 py-5 flex flex-col gap-4">
           {REGLAS.map((r) => (
             <div key={r.num} className="flex gap-4 items-start">
-              <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#1a1a1a] flex items-center justify-center text-[11px] font-black text-[#3dbb78] tracking-tight">
+              <span className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-black tracking-tight" style={{ backgroundColor: "var(--text)", color: "var(--green)" }}>
                 {r.num}
               </span>
               <div className="flex-1 pt-1">
-                <p className="text-[14px] font-black text-[#1a1a1a] leading-tight mb-0.5">{r.titulo}</p>
-                <p className="text-[13px] font-medium text-[#6b6b6b] leading-relaxed">{r.desc}</p>
+                <p className="text-[14px] font-black leading-tight mb-0.5" style={{ color: "var(--text)" }}>{r.titulo}</p>
+                <p className="text-[13px] font-medium leading-relaxed" style={{ color: "var(--text-2)" }}>{r.desc}</p>
               </div>
             </div>
           ))}
 
           {/* Leyenda picks */}
-          <div className="mt-1 p-4 bg-[#f2f2ef] rounded-xl">
-            <p className="text-[11px] font-extrabold text-[#6b6b6b] uppercase tracking-widest mb-3">Opciones de predicción</p>
+          <div className="mt-1 p-4 rounded-xl" style={{ backgroundColor: "var(--surface-2)" }}>
+            <p className="text-[11px] font-extrabold uppercase tracking-widest mb-3" style={{ color: "var(--text-2)" }}>Opciones de predicción</p>
             <div className="flex gap-3">
               {pickChips.map((o) => (
                 <div key={o.key} className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl" style={{ background: o.bg }}>
                   <span className="text-[18px] font-black" style={{ color: o.color }}>{o.key}</span>
-                  <span className="text-[10px] font-bold text-[#1a1a1a]">{o.label}</span>
+                  <span className="text-[10px] font-bold" style={{ color: "var(--text)" }}>{o.label}</span>
                 </div>
               ))}
             </div>
@@ -125,13 +126,37 @@ function ReglasModal({ onClose }) {
   );
 }
 
+function BellIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+  );
+}
+
 export function Navbar({ showWeek = false, variant = "app" }) {
   const { pathname } = useLocation();
   const { user, logout, theme, toggleTheme } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reglasOpen, setReglasOpen] = useState(false);
   const [openCount, setOpenCount] = useState(0);
+  const [notifCount, setNotifCount] = useState(0);
+  const notifRef = useRef(null);
   const isDark = theme === 'dark';
+
+  // Poll notificaciones para usuarios autenticados
+  useEffect(() => {
+    if (!user) { setNotifCount(0); return; }
+    let mounted = true;
+    const fetchNotif = () => {
+      authService.notificaciones().then(d => {
+        if (mounted) setNotifCount(d.count || 0);
+      }).catch(() => {});
+    };
+    fetchNotif();
+    notifRef.current = setInterval(fetchNotif, 60_000);
+    return () => { mounted = false; clearInterval(notifRef.current); };
+  }, [user]);
 
   const activeLink = pathname.substring(1) || "inicio";
 
@@ -237,6 +262,22 @@ export function Navbar({ showWeek = false, variant = "app" }) {
 
           {/* Desktop Right Side */}
           <div className="hidden md:flex items-center gap-3 z-50">
+            {/* Notification bell */}
+            {user && (
+              <div className="relative">
+                <button
+                  className="w-[32px] h-[32px] rounded-full flex items-center justify-center border border-[#e4e4e0] bg-[#f2f2ef] hover:bg-[#e4e4e0] transition-colors text-[#6b6b6b]"
+                  title={notifCount > 0 ? `${notifCount} notificación${notifCount > 1 ? 'es' : ''} pendiente${notifCount > 1 ? 's' : ''}` : "Sin notificaciones"}
+                >
+                  <BellIcon size={14} />
+                </button>
+                {notifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center bg-[#d93025] text-white text-[9px] font-black rounded-full px-[3px] leading-none">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </div>
+            )}
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
@@ -293,10 +334,11 @@ export function Navbar({ showWeek = false, variant = "app" }) {
         {/* Mobile Drawer */}
         <div
           className={cn(
-            "fixed inset-0 bg-white z-40 flex flex-col pt-20 px-6",
+            "fixed inset-0 z-40 flex flex-col pt-20 px-6",
             "transition-transform duration-300 ease-in-out",
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           )}
+          style={{ backgroundColor: "var(--surface)" }}
         >
           <div key={openCount} className="flex flex-col gap-4">
             {links.map((l, i) =>
@@ -331,7 +373,7 @@ export function Navbar({ showWeek = false, variant = "app" }) {
           <div className="mt-auto pb-8 flex flex-col gap-4">
             {/* Theme toggle row */}
             <div className="flex items-center justify-between px-1">
-              <span className="text-[13px] font-bold text-[#6b6b6b]" style={{ fontFamily: "Nunito, sans-serif" }}>
+              <span className="text-[13px] font-bold" style={{ fontFamily: "Nunito, sans-serif", color: "var(--text-2)" }}>
                 {isDark ? "Tema oscuro" : "Tema claro"}
               </span>
               <button
@@ -346,8 +388,8 @@ export function Navbar({ showWeek = false, variant = "app" }) {
             </div>
             {user ? (
               <div
-                className="flex items-center justify-between p-4 bg-[#f2f2ef] rounded-2xl animate-fade-in"
-                style={{ animationDelay: `${links.length * 60 + 60}ms` }}
+                className="flex items-center justify-between p-4 rounded-2xl animate-fade-in"
+                style={{ animationDelay: `${links.length * 60 + 60}ms`, backgroundColor: "var(--surface-2)" }}
               >
                 <div className="flex items-center gap-3">
                   <div

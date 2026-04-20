@@ -196,6 +196,19 @@ html, body {
 /* ── Hover bg overrides ── */
 [data-theme="dark"] .hover\:bg-\[\#d6f5e8\]:hover  { background-color: var(--green-pale); }
 
+/* ── Mis resultados modal — quiniela result rows ── */
+[data-theme="dark"] .bg-\[\#f0fdf4\]               { background-color: #0a1f12; }
+[data-theme="dark"] .border-\[\#bbf7d0\]           { border-color: #1a4428; }
+[data-theme="dark"] .bg-\[\#fff1f2\]               { background-color: var(--red-pale); }
+[data-theme="dark"] .border-\[\#fca5a5\]           { border-color: #5a2020; }
+
+/* ── Notification bell badge ── */
+[data-theme="dark"] .bg-\[\#d93025\]               { background-color: #c02020; }
+
+/* ── Text colors used in modals/components without Tailwind override ── */
+[data-theme="dark"] .text-\[\#25854f\]             { color: var(--green-dk); }
+[data-theme="dark"] .text-\[\#3dbb78\]             { color: var(--green); }
+
 /* Shimmer ─────────────────────────────────────────────────── */
 [data-theme="dark"] .animate-shimmer {
   background: linear-gradient(90deg, var(--shimmer-1) 0%, var(--shimmer-2) 50%, var(--shimmer-1) 100%);

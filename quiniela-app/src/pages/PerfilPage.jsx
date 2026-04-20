@@ -11,7 +11,8 @@ import { quinielaService } from "../services/quinielaService";
 const font = "Nunito, sans-serif";
 
 // Backend base URL for resolving /uploads/ paths
-const API_BASE = import.meta.env.VITE_API_URL || "";
+// Strip the /api suffix — uploads are served from the root, not /api/uploads
+const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/api$/, "");
 
 function resolvePhotoUrl(path) {
   if (!path) return null;

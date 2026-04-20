@@ -203,6 +203,11 @@ export const adminService = {
     return data;
   },
 
+  eliminarQuiniela: async (id) => {
+    const { data } = await apiClient.delete(`/admin/quinielas/${id}`);
+    return data;
+  },
+
   // Reportes — retornan URL para abrir/descargar directamente
   getReporteCSVUrl: (id_quiniela) =>
     `${apiClient.defaults.baseURL}/admin/reportes/${id_quiniela}/csv`,

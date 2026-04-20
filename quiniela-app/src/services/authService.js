@@ -45,4 +45,14 @@ export const authService = {
     const { data } = await apiClient.post('/auth/reset-password', { correo, codigo, nueva_contrasena });
     return data;
   },
+
+  notificaciones: async () => {
+    const { data } = await apiClient.get('/auth/notificaciones');
+    return data;
+  },
+
+  misResultadosQuiniela: async (id_quiniela) => {
+    const { data } = await apiClient.get(`/auth/mis-quinielas/${id_quiniela}/resultados`);
+    return data;
+  },
 };

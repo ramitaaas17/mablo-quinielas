@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AdminLayout, TopBar, AdminStatCard, SectionHeader,
   MiniQuinielaCard, IconPlus,
@@ -28,21 +28,40 @@ export default function AdminDashboard({ onNavigate }) {
   const [actividad, setActividad] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState(null);
+  const [, setTick] = useState(0); // para re-render de timeAgo
+  const actividadRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([
-      adminService.getStats().catch(() => null),
-      adminService.getQuinielas().catch(() => []),
-      adminService.getActividad().catch(() => []),
-    ]).then(([s, q, a]) => {
+    const cargar = async () => {
+      const [s, q, a] = await Promise.all([
+        adminService.getStats().catch(() => null),
+        adminService.getQuinielas().catch(() => []),
+        adminService.getActividad().catch(() => []),
+      ]);
       if (!mounted) return;
       setStats(s);
       setQuinielas(q.filter(x => x.estado === 'abierta').slice(0, 3));
       setActividad(a.slice(0, 8));
       setLoading(false);
-    });
-    return () => { mounted = false; };
+    };
+    cargar();
+
+    // Auto-refresh actividad cada 60s
+    actividadRef.current = setInterval(() => {
+      adminService.getActividad().catch(() => []).then(a => {
+        if (mounted) setActividad(a.slice(0, 8));
+      });
+    }, 60_000);
+
+    // Re-render timeAgo cada 30s para mantener tiempos actualizados
+    const tickInterval = setInterval(() => { if (mounted) setTick(t => t + 1); }, 30_000);
+
+    return () => {
+      mounted = false;
+      clearInterval(actividadRef.current);
+      clearInterval(tickInterval);
+    };
   }, []);
 
   const s = stats || {};
@@ -181,10 +200,9 @@ export default function AdminDashboard({ onNavigate }) {
                       <tr
                         key={i}
                         className="border-b border-[#e4e4e0] last:border-b-0 animate-fade-in transition-colors"
-                        style={{ cursor: "default" }}
+                        style={{ animationDelay: `${i * 40 + 100}ms`, cursor: "default" }}
                         onMouseEnter={e => e.currentTarget.style.backgroundColor = "var(--bg)"}
                         onMouseLeave={e => e.currentTarget.style.backgroundColor = ""}
-                        style={{ animationDelay: `${i * 40 + 100}ms` }}
                       >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2">
@@ -196,8 +214,15 @@ export default function AdminDashboard({ onNavigate }) {
                           </div>
                         </td>
                         <td className="px-3 py-3">
-                          <span className="text-[11px] font-extrabold px-2.5 py-[3px] rounded-full whitespace-nowrap"
-                            style={{ background: bs.bg, color: bs.text }}>{r.tipo}</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] font-extrabold px-2.5 py-[3px] rounded-full whitespace-nowrap"
+                              style={{ background: bs.bg, color: bs.text }}>{r.tipo}</span>
+                            {r.count > 1 && (
+                              <span className="text-[10px] font-bold px-1.5 py-[2px] rounded-full bg-[#f2f2ef] text-[#6b6b6b]">
+                                ×{r.count}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 py-3 text-[12px] text-[#6b6b6b]">{r.quiniela || "—"}</td>
                         <td className="px-3 py-3 text-[12px] text-[#6b6b6b] whitespace-nowrap">{timeAgo(r.fecha)}</td>

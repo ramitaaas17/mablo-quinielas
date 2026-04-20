@@ -51,6 +51,10 @@ export default function AdminQuinielas({ onNavigate }) {
   // Close quiniela confirm
   const [closeTarget, setCloseTarget] = useState(null);
 
+  // Delete quiniela confirm
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const cargar = useCallback(async () => {
     setLoading(true);
     try {
@@ -280,6 +284,17 @@ export default function AdminQuinielas({ onNavigate }) {
     } catch { }
   };
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await adminService.eliminarQuiniela(deleteTarget.id);
+      setDeleteTarget(null);
+      cargar();
+    } catch { }
+    setDeleteLoading(false);
+  };
+
   const abiertas = quinielas.filter(q => q.estado === 'abierta');
   const cerradas = quinielas.filter(q => q.estado === 'cerrada');
   const resueltas = quinielas.filter(q => q.estado === 'resuelta');
@@ -366,10 +381,11 @@ export default function AdminQuinielas({ onNavigate }) {
               <div>
                 <SectionHeader title="Historial" />
                 <div className="bg-white border border-[#e4e4e0] rounded-[14px] overflow-hidden">
-                  <table className="w-full" style={{ fontFamily: font }}>
+                  <div className="overflow-x-auto">
+                  <table className="w-full min-w-[580px]" style={{ fontFamily: font }}>
                     <thead>
                       <tr className="border-b border-[#e4e4e0]">
-                        {["Nombre", "Liga", "Partidos", "Jugadores", "Bolsa acumulada", "Estado"].map(h => (
+                        {["Nombre", "Liga", "Partidos", "Jugadores", "Bolsa acumulada", "Estado", ""].map(h => (
                           <th key={h} className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-[0.4px] text-[#6b6b6b]">{h}</th>
                         ))}
                       </tr>
@@ -385,10 +401,22 @@ export default function AdminQuinielas({ onNavigate }) {
                             ${(q.pozo_acumulado || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                           </td>
                           <td className="px-3 py-3"><Badge label={q.estado} /></td>
+                          <td className="px-3 py-3">
+                            <button
+                              onClick={() => setDeleteTarget(q)}
+                              className="w-7 h-7 rounded-[7px] flex items-center justify-center border border-[#e4e4e0] text-[#6b6b6b] hover:bg-[#fee2e2] hover:border-red-200 hover:text-[#b91c1c] transition-colors"
+                              title="Eliminar quiniela definitivamente"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                              </svg>
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -642,6 +670,42 @@ export default function AdminQuinielas({ onNavigate }) {
               <button onClick={handleClose}
                 className="flex-1 h-[42px] bg-[#d93025] text-white rounded-full text-[14px] font-extrabold hover:bg-[#b91c1c] transition-colors">
                 Sí, cerrar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* MODAL: Eliminar quiniela definitivamente */}
+      {deleteTarget && (
+        <Modal onClose={() => !deleteLoading && setDeleteTarget(null)}>
+          <div className="w-full sm:w-[380px] p-5 sm:p-7" style={{ fontFamily: font }}>
+            <div className="w-[42px] h-[42px] bg-[#fee2e2] rounded-[10px] flex items-center justify-center mb-5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>
+              </svg>
+            </div>
+            <h2 className="text-[20px] font-black text-[#1a1a1a] tracking-[-0.5px]">Eliminar quiniela</h2>
+            <p className="text-[13px] font-medium text-[#6b6b6b] mt-1 mb-2">
+              Esta acción eliminará permanentemente <strong className="text-[#1a1a1a]">"{deleteTarget.nombre}"</strong> junto con todos sus partidos, predicciones y pagos.
+            </p>
+            <p className="text-[12px] font-bold text-[#b91c1c] bg-[#fee2e2] rounded-[8px] px-3 py-2 mb-5">
+              Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteLoading}
+                className="flex-1 h-[42px] border border-[#e4e4e0] rounded-full text-[14px] font-extrabold text-[#1a1a1a] hover:bg-[#f2f2ef] transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="flex-[1.5] h-[42px] bg-[#d93025] text-white rounded-full text-[14px] font-extrabold hover:bg-[#b91c1c] transition-colors disabled:opacity-60"
+              >
+                {deleteLoading ? "Eliminando..." : "Eliminar definitivamente"}
               </button>
             </div>
           </div>

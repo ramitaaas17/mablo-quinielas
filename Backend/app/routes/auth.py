@@ -8,7 +8,7 @@ import time
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from ..models import Usuario, UsuarioQuiniela, Quiniela, Equipo, PasswordReset
+from ..models import Usuario, UsuarioQuiniela, Quiniela, Equipo, PasswordReset, Partido, Prediccion, Pago
 from ..extensions import db, limiter
 from ..mailer import enviar_codigo_reset
 
@@ -395,3 +395,84 @@ def reset_password():
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Error al actualizar contraseña"}), 500
+
+
+@auth_bp.route('/notificaciones', methods=['GET'])
+@jwt_required()
+def notificaciones():
+    """Conteo de notificaciones relevante para el usuario actual."""
+    id_usr = get_jwt_identity()
+    user = Usuario.query.get(id_usr)
+    if not user:
+        return jsonify({"count": 0}), 200
+
+    if user.is_admin:
+        count = Pago.query.filter_by(estado='pendiente').count()
+    else:
+        count = Pago.query.filter_by(id_usr=id_usr, estado='pendiente').count()
+
+    return jsonify({"count": int(count)}), 200
+
+
+@auth_bp.route('/mis-quinielas/<id_quiniela>/resultados', methods=['GET'])
+@jwt_required()
+def mis_resultados_quiniela(id_quiniela):
+    """Devuelve los detalles de una quiniela con las predicciones del usuario."""
+    id_usr = get_jwt_identity()
+
+    uq = UsuarioQuiniela.query.filter_by(id_usr=id_usr, id_quiniela=id_quiniela).first()
+    if not uq:
+        return jsonify({"error": "No estás inscrito en esta quiniela"}), 404
+
+    q = Quiniela.query.get_or_404(id_quiniela)
+    partidos = Partido.query.filter_by(id_quiniela=id_quiniela).order_by(Partido.inicio.asc()).all()
+
+    partidos_data = []
+    for p in partidos:
+        eq_local = Equipo.query.get(p.local)
+        eq_visit = Equipo.query.get(p.visitante)
+        pred = Prediccion.query.filter_by(id_usr=id_usr, id_partido=p.id_partido).first()
+
+        resultado = None
+        if p.ptos_local is not None and p.ptos_visitante is not None and not p.cancelado:
+            if p.ptos_local > p.ptos_visitante:
+                resultado = "Local"
+            elif p.ptos_local < p.ptos_visitante:
+                resultado = "Visitante"
+            else:
+                resultado = "Empate"
+
+        partidos_data.append({
+            "id": str(p.id_partido),
+            "local_nombre": eq_local.nombre if eq_local else "",
+            "visitante_nombre": eq_visit.nombre if eq_visit else "",
+            "inicio": p.inicio.isoformat(),
+            "ptos_local": p.ptos_local,
+            "ptos_visitante": p.ptos_visitante,
+            "cancelado": p.cancelado,
+            "resultado": resultado,
+            "mi_seleccion": pred.selecciones if pred else [],
+            "es_correcta": pred.es_correcta if pred else None,
+        })
+
+    todos = UsuarioQuiniela.query.filter_by(id_quiniela=id_quiniela).order_by(
+        UsuarioQuiniela.puntos_total.desc()
+    ).all()
+    mi_posicion = None
+    for idx, uq2 in enumerate(todos, start=1):
+        if str(uq2.id_usr) == str(id_usr):
+            mi_posicion = idx
+            break
+
+    return jsonify({
+        "id_quiniela": str(q.id_quiniela),
+        "nombre": q.nombre,
+        "estado": q.estado,
+        "cierre": q.cierre.isoformat(),
+        "pozo_acumulado": float(q.pozo_acumulado),
+        "comision": float(q.comision),
+        "mis_puntos": uq.puntos_total,
+        "mi_posicion": mi_posicion,
+        "total_jugadores": len(todos),
+        "partidos": partidos_data,
+    }), 200
