@@ -4,8 +4,9 @@ import { useStore } from "./store";
 
 // Lazy loading — cada página es un chunk separado.
 // El navegador solo descarga el JS de la página que visitas.
-const LoginPage       = lazy(() => import("./pages/LoginPage.jsx"));
-const RegisterPage    = lazy(() => import("./pages/RegisterPage.jsx"));
+const LoginPage           = lazy(() => import("./pages/LoginPage.jsx"));
+const RegisterPage        = lazy(() => import("./pages/RegisterPage.jsx"));
+const ForgotPasswordPage  = lazy(() => import("./pages/ForgotPasswordPage.jsx"));
 const DashboardPage   = lazy(() => import("./pages/DashboardPage.jsx"));
 const TablaPage       = lazy(() => import("./pages/TablaPage.jsx"));
 const MisQuinielasPage = lazy(() => import("./pages/MisQuinielasPage.jsx"));
@@ -48,8 +49,9 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/login"    element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <LoginPage />} />
-          <Route path="/register" element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <RegisterPage />} />
+          <Route path="/login"           element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <LoginPage />} />
+          <Route path="/register"        element={user ? <Navigate to={user.isAdmin ? "/admin" : "/"} replace /> : <RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/tabla" element={<ProtectedRoute><TablaPage /></ProtectedRoute>} />

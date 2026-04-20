@@ -1,12 +1,16 @@
 import csv
 import io
 import os
+import re
 import uuid
 import base64
 import datetime
+import logging
 from functools import wraps
 from flask import Blueprint, request, jsonify, Response, send_from_directory
 from flask_jwt_extended import jwt_required, get_jwt_identity
+
+audit_logger = logging.getLogger("audit")
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 from ..models import (
@@ -511,6 +515,8 @@ def confirmar_pago(id_pago):
         q.pozo_acumulado = float(total_confirmado)
 
     db.session.commit()
+    audit_logger.info("[AUDIT] CONFIRMAR_PAGO admin=%s pago=%s usuario=%s monto=%s quiniela=%s",
+                      id_admin, id_pago, pago.id_usr, pago.monto, pago.id_quiniela)
     return jsonify({"mensaje": "Pago confirmado", "pago": _format_pago(pago)}), 200
 
 
@@ -716,22 +722,27 @@ def listar_usuarios():
     return jsonify(resultado), 200
 
 
+_ADMIN_EMAIL_RE    = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+_ADMIN_PASSWORD_RE = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$')
+_ADMIN_USERNAME_RE = re.compile(r'^[a-zA-Z0-9_]{3,50}$')
+
 @admin_bp.route('/usuarios', methods=['POST'])
 @admin_required
 def crear_usuario():
-    import re as _re
     data = request.get_json(silent=True) or {}
     campos = ['nombre_completo', 'username', 'correo', 'contrasena', 'fecha_nacimiento']
     for campo in campos:
         if not data.get(campo):
             return jsonify({"error": f"Falta el campo: {campo}"}), 400
 
-    email_re = _re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-    if not email_re.match(data['correo']):
+    if not _ADMIN_EMAIL_RE.match(data['correo']):
         return jsonify({"error": "Correo inválido"}), 400
 
-    if len(data['contrasena']) < 6:
-        return jsonify({"error": "Contraseña mínimo 6 caracteres"}), 400
+    if not _ADMIN_USERNAME_RE.match(data['username']):
+        return jsonify({"error": "Username solo puede contener letras, números y guión bajo (3–50 caracteres)"}), 400
+
+    if not _ADMIN_PASSWORD_RE.match(data['contrasena']):
+        return jsonify({"error": "La contraseña debe tener al menos 8 caracteres, incluir letras y números"}), 400
 
     if Usuario.query.filter_by(username=data['username']).first():
         return jsonify({"error": "Username ya en uso"}), 409
@@ -750,6 +761,8 @@ def crear_usuario():
         )
         db.session.add(nuevo)
         db.session.commit()
+        audit_logger.info("[AUDIT] CREAR_USUARIO admin=%s creó usuario=%s (%s) is_admin=%s",
+                          get_jwt_identity(), str(nuevo.id_usr), nuevo.correo, nuevo.is_admin)
         return jsonify({"mensaje": "Usuario creado", "id": str(nuevo.id_usr)}), 201
     except ValueError:
         return jsonify({"error": "Fecha de nacimiento inválida"}), 400
@@ -761,9 +774,11 @@ def crear_usuario():
 @admin_bp.route('/usuarios/<id_usuario>', methods=['DELETE'])
 @admin_required
 def eliminar_usuario(id_usuario):
+    admin_id = get_jwt_identity()
     user = Usuario.query.get_or_404(id_usuario)
     if user.is_admin:
         return jsonify({"error": "No se puede eliminar un administrador"}), 400
+    audit_logger.warning("[AUDIT] ELIMINAR_USUARIO admin=%s eliminó usuario=%s (%s)", admin_id, id_usuario, user.correo)
     db.session.delete(user)
     db.session.commit()
     return jsonify({"mensaje": "Usuario eliminado"}), 200

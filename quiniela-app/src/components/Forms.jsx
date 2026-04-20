@@ -1,5 +1,6 @@
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { cn } from "../utils/cn";
-
 export function InputField({
   label,
   placeholder,
@@ -11,35 +12,51 @@ export function InputField({
   helperText,
   name,
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword && showPassword ? "text" : type;
+
   return (
-    <div className="flex flex-col gap-1.5 w-full group/field">
+    <div className="flex flex-col gap-1.5 w-full group/field relative">
       <label
         className="text-[12px] font-bold uppercase tracking-[0.4px] text-[#6b6b6b] transition-colors group-focus-within/field:text-[#3dbb78]"
         style={{ fontFamily: "Nunito, sans-serif" }}
       >
         {label}
       </label>
-      <input
-        type={type}
-        name={name}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onKeyDown={onKeyDown}
-        className={cn(
-          "border rounded-[10px] h-11 px-4 text-[14.5px] font-semibold",
-          "placeholder:text-[#a0a09c] outline-none transition-all duration-200 w-full",
-          "focus:ring-[3px] focus:scale-[1.01]",
-          error
-            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-            : "border-[#e0e0dc] focus:border-[#3dbb78] focus:ring-[#3dbb78]/20"
+      <div className="relative w-full">
+        <input
+          type={inputType}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          onKeyDown={onKeyDown}
+          className={cn(
+            "border rounded-[10px] h-11 px-4 text-[14.5px] font-semibold",
+            "placeholder:text-[#a0a09c] outline-none transition-all duration-200 w-full",
+            "focus:ring-[3px] focus:scale-[1.01]",
+            isPassword && "pr-11", // Espacio para el ojito
+            error
+              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+              : "border-[#e0e0dc] focus:border-[#3dbb78] focus:ring-[#3dbb78]/20"
+          )}
+          style={{
+            fontFamily: "Nunito, sans-serif",
+            backgroundColor: "var(--input-bg)",
+            color: "var(--text)",
+          }}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a0a09c] hover:text-[#3dbb78] transition-colors focus:outline-none"
+          >
+            {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
+          </button>
         )}
-        style={{
-          fontFamily: "Nunito, sans-serif",
-          backgroundColor: "var(--input-bg)",
-          color: "var(--text)",
-        }}
-      />
+      </div>
       {error && helperText && (
         <span
           className="text-[11px] font-bold text-red-500 mt-0.5 animate-fade-in"

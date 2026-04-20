@@ -1,8 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Navbar, InputField, PrimaryButton, REGISTER_BG } from "../components";
 import { useStore } from "../store";
 import { authService } from "../services/authService";
+import { quinielaService } from "../services/quinielaService";
+
+const font = "Nunito, sans-serif";
+
+// ─── Team selector component ──────────────────────────────────────────────────
+function EquipoSelector({ value, onChange }) {
+  const [ligas, setLigas] = useState([]);
+  const [ligaId, setLigaId] = useState("");
+  const [equipos, setEquipos] = useState([]);
+  const [loadingEquipos, setLoadingEquipos] = useState(false);
+
+  useEffect(() => {
+    quinielaService.getLigas().then((ls) => {
+      setLigas(ls);
+      if (ls.length === 1) setLigaId(ls[0].id);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!ligaId) { setEquipos([]); return; }
+    setLoadingEquipos(true);
+    quinielaService.getEquipos(ligaId).then((es) => {
+      setEquipos(es);
+    }).catch(() => setEquipos([])).finally(() => setLoadingEquipos(false));
+  }, [ligaId]);
+
+  const baseInput = "w-full h-[46px] px-4 bg-white border border-[#e4e4e0] rounded-[14px] text-[14px] font-semibold text-[#1a1a1a] outline-none transition-all focus:border-[#3dbb78] focus:ring-2 focus:ring-[#3dbb78]/20 appearance-none cursor-pointer";
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-px bg-[#e4e4e0]" />
+        <span className="text-[11px] font-extrabold text-[#6b6b6b] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: font }}>
+          Equipo favorito (opcional)
+        </span>
+        <div className="flex-1 h-px bg-[#e4e4e0]" />
+      </div>
+
+      {ligas.length > 1 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>Liga</label>
+          <select
+            className={baseInput}
+            style={{ fontFamily: font }}
+            value={ligaId}
+            onChange={(e) => { setLigaId(e.target.value); onChange(""); }}
+          >
+            <option value="">Selecciona una liga</option>
+            {ligas.map((l) => <option key={l.id} value={l.id}>{l.nombre}</option>)}
+          </select>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-1">
+        <label className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>Equipo</label>
+        <select
+          className={baseInput}
+          style={{ fontFamily: font, color: value ? "#1a1a1a" : "#a0a0a0" }}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={!ligaId || loadingEquipos}
+        >
+          <option value="">{loadingEquipos ? "Cargando..." : "Sin equipo"}</option>
+          {equipos.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -10,6 +79,7 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState({
     nombre: "", apellido: "", usuario: "", correo: "", fecha: "", password: "", confirm: "",
+    equipoFavorito: "",
   });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
@@ -47,6 +117,7 @@ export default function RegisterPage() {
         correo: form.correo.trim().toLowerCase(),
         contrasena: form.password,
         fecha_nacimiento: form.fecha,
+        equipo_favorito: form.equipoFavorito || null,
       };
       const data = await authService.registro(payload);
       login(data);
@@ -122,6 +193,11 @@ export default function RegisterPage() {
               <InputField label="Contraseña" type="password" placeholder="••••••••" value={form.password} error={!!errors.password} helperText={errors.password} onChange={set("password")} />
               <InputField label="Confirmar" type="password" placeholder="••••••••" value={form.confirm} error={!!errors.confirm} helperText={errors.confirm} onChange={set("confirm")} />
             </div>
+
+            <EquipoSelector
+              value={form.equipoFavorito}
+              onChange={(id) => setForm((f) => ({ ...f, equipoFavorito: id }))}
+            />
 
             {apiError && (
               <p className="text-[13px] font-semibold text-[#b91c1c] bg-[#fee2e2] border border-red-200 rounded-[10px] px-3 py-2" style={{ fontFamily: "Nunito, sans-serif" }}>

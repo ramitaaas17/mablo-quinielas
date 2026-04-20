@@ -30,4 +30,19 @@ export const authService = {
     const { data } = await apiClient.patch('/auth/foto-perfil', { foto: fotoDataUrl });
     return data;
   },
+
+  actualizarPerfil: async (payload) => {
+    const { data } = await apiClient.patch('/auth/perfil', payload);
+    return data;
+  },
+
+  forgotPassword: async (correo) => {
+    const { data } = await apiClient.post('/auth/forgot-password', { correo });
+    return data;
+  },
+
+  resetPassword: async (correo, codigo, nueva_contrasena) => {
+    const { data } = await apiClient.post('/auth/reset-password', { correo, codigo, nueva_contrasena });
+    return data;
+  },
 };

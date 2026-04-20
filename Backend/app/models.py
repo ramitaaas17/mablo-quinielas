@@ -100,3 +100,13 @@ class Invitacion(db.Model):
     codigo = db.Column(db.String(16), nullable=False, unique=True)
     activo = db.Column(db.Boolean, nullable=False, default=True)
     fecha_creacion = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+
+class PasswordReset(db.Model):
+    __tablename__ = 'password_reset'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    correo = db.Column(db.String(150), nullable=False, index=True)
+    codigo_hash = db.Column(db.Text, nullable=False)
+    expira = db.Column(db.DateTime, nullable=False)
+    usado = db.Column(db.Boolean, nullable=False, default=False)
+    creado = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)

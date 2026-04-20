@@ -1,13 +1,16 @@
 import re
 import os
 import uuid
+import secrets
 import base64
 import datetime
+import time
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from ..models import Usuario, UsuarioQuiniela, Quiniela, Equipo
+from ..models import Usuario, UsuarioQuiniela, Quiniela, Equipo, PasswordReset
 from ..extensions import db, limiter
+from ..mailer import enviar_codigo_reset
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -228,6 +231,15 @@ def actualizar_foto_perfil():
     if not isinstance(data_url, str) or not data_url.startswith('data:'):
         return jsonify({"error": "Formato de imagen inválido"}), 400
 
+    # Magic bytes de formatos permitidos
+    _MAGIC = {
+        b'\xff\xd8\xff': 'jpg',      # JPEG
+        b'\x89PNG\r\n\x1a\n': 'png', # PNG
+        b'RIFF': 'webp',             # WebP (primeros 4 bytes; bytes 8-11 son 'WEBP')
+        b'GIF87a': 'gif',            # GIF87
+        b'GIF89a': 'gif',            # GIF89
+    }
+
     try:
         header, encoded = data_url.split(',', 1)
         mime = header.split(';')[0].replace('data:', '')
@@ -237,13 +249,20 @@ def actualizar_foto_perfil():
         if len(raw) > MAX_FOTO_BYTES:
             return jsonify({"error": "La imagen supera el límite de 5 MB"}), 400
 
-        ext = 'jpg'
-        if 'png' in mime:
-            ext = 'png'
-        elif 'webp' in mime:
-            ext = 'webp'
-        elif 'gif' in mime:
-            ext = 'gif'
+        # Verificar magic bytes reales (previene spoofing de MIME)
+        detected = None
+        for magic, fmt in _MAGIC.items():
+            if raw[:len(magic)] == magic:
+                detected = fmt
+                break
+        # WebP necesita validación adicional en bytes 8-11
+        if detected == 'webp' and raw[8:12] != b'WEBP':
+            detected = None
+        if not detected:
+            return jsonify({"error": "El contenido del archivo no corresponde a una imagen válida"}), 400
+
+        # Extensión determinada por magic bytes, no por el MIME declarado
+        ext = detected if detected != 'jpg' else 'jpg'
 
         filename = f"foto_{uuid.uuid4().hex}.{ext}"
         filepath = os.path.join(UPLOAD_DIR, filename)
@@ -264,3 +283,115 @@ def actualizar_foto_perfil():
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Error al procesar la imagen"}), 500
+
+
+@auth_bp.route('/perfil', methods=['PATCH'])
+@jwt_required()
+@limiter.limit("10 per minute")
+def actualizar_perfil():
+    id_usr = get_jwt_identity()
+    user = Usuario.query.get(id_usr)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    data = request.get_json(silent=True) or {}
+
+    if 'equipo_favorito' in data:
+        eq_id = data['equipo_favorito']
+        if eq_id is None or eq_id == "":
+            user.equipo_favorito = None
+        else:
+            eq = Equipo.query.get(eq_id)
+            if not eq:
+                return jsonify({"error": "Equipo no encontrado"}), 404
+            user.equipo_favorito = eq_id
+
+    try:
+        db.session.commit()
+        return jsonify(_usuario_to_dict(user)), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Error al actualizar perfil"}), 500
+
+
+_FORGOT_MIN_SECS = 0.6  # tiempo mínimo de respuesta para mitigar timing attacks
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit("3 per minute; 10 per hour")
+def forgot_password():
+    t0 = time.monotonic()
+    data = request.get_json(silent=True) or {}
+    correo = data.get('correo', '').strip().lower()
+
+    if not correo or not EMAIL_RE.match(correo):
+        return jsonify({"error": "Ingresa un correo válido"}), 400
+
+    user = Usuario.query.filter_by(correo=correo).first()
+    if user:
+        # Invalidar códigos anteriores
+        PasswordReset.query.filter_by(correo=correo, usado=False).update({"usado": True})
+        db.session.flush()
+
+        # secrets.randbelow da entropía criptográfica (no predecible como random)
+        codigo = f"{secrets.randbelow(900000) + 100000}"
+        expira = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+        reset = PasswordReset(
+            correo=correo,
+            codigo_hash=generate_password_hash(codigo),
+            expira=expira,
+        )
+        db.session.add(reset)
+        db.session.commit()
+        enviar_codigo_reset(correo, codigo)
+
+    # Delay constante: iguala el tiempo de respuesta independientemente de si
+    # el correo existe o no, previniendo enumeración por timing.
+    elapsed = time.monotonic() - t0
+    if elapsed < _FORGOT_MIN_SECS:
+        time.sleep(_FORGOT_MIN_SECS - elapsed)
+
+    return jsonify({"mensaje": "Si el correo está registrado, recibirás un código en breve."}), 200
+
+
+def _reset_key():
+    """Rate-limit key = IP + correo, para prevenir fuerza bruta distribuida por email."""
+    data = request.get_json(silent=True) or {}
+    correo = data.get('correo', '').strip().lower()
+    return f"{request.remote_addr}:{correo}"
+
+@auth_bp.route('/reset-password', methods=['POST'])
+@limiter.limit("5 per minute; 15 per hour", key_func=_reset_key)
+def reset_password():
+    data = request.get_json(silent=True) or {}
+    correo = data.get('correo', '').strip().lower()
+    codigo = data.get('codigo', '').strip()
+    nueva = data.get('nueva_contrasena', '')
+
+    if not correo or not codigo or not nueva:
+        return jsonify({"error": "Faltan campos requeridos"}), 400
+
+    if not PASSWORD_RE.match(nueva):
+        return jsonify({"error": "La contraseña debe tener al menos 8 caracteres, incluir letras y números"}), 400
+
+    reset = PasswordReset.query.filter_by(
+        correo=correo, usado=False
+    ).order_by(PasswordReset.creado.desc()).first()
+
+    if not reset or reset.expira < datetime.datetime.utcnow():
+        return jsonify({"error": "Código incorrecto o expirado"}), 400
+
+    if not check_password_hash(reset.codigo_hash, codigo):
+        return jsonify({"error": "Código incorrecto o expirado"}), 400
+
+    user = Usuario.query.filter_by(correo=correo).first()
+    if not user:
+        return jsonify({"error": "Código incorrecto o expirado"}), 400
+
+    reset.usado = True
+    user.contraseña_hasheada = generate_password_hash(nueva)
+    try:
+        db.session.commit()
+        return jsonify({"mensaje": "Contraseña actualizada correctamente"}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Error al actualizar contraseña"}), 500

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Trash2, X, Check, Loader2, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Camera, Trash2, X, Check, Loader2, ZoomIn, ZoomOut, RotateCw, ChevronDown } from "lucide-react";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Navbar, StatCard } from "../components";
 import { useStore } from "../store";
 import { authService } from "../services/authService";
+import { quinielaService } from "../services/quinielaService";
 
 const font = "Nunito, sans-serif";
 
@@ -314,6 +315,99 @@ function PhotoActions({ hasPhoto, hasPreview, uploading, onSelect, onSave, onCan
   );
 }
 
+// ─── Editor de equipo favorito ────────────────────────────────────────────────
+function EquipoEdit({ currentId, currentNombre, onSaved }) {
+  const [open, setOpen] = useState(false);
+  const [ligas, setLigas] = useState([]);
+  const [ligaId, setLigaId] = useState("");
+  const [equipos, setEquipos] = useState([]);
+  const [selectedId, setSelectedId] = useState(currentId || "");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    quinielaService.getLigas().then((ls) => {
+      setLigas(ls);
+      if (ls.length === 1) setLigaId(ls[0].id);
+    }).catch(() => {});
+  }, [open]);
+
+  useEffect(() => {
+    if (!ligaId) { setEquipos([]); return; }
+    setLoading(true);
+    quinielaService.getEquipos(ligaId).then(setEquipos).catch(() => setEquipos([])).finally(() => setLoading(false));
+  }, [ligaId]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMsg(null);
+    try {
+      const res = await authService.actualizarPerfil({ equipo_favorito: selectedId || null });
+      onSaved(res);
+      setMsg({ ok: true, text: "¡Equipo actualizado!" });
+      setTimeout(() => { setOpen(false); setMsg(null); }, 1200);
+    } catch {
+      setMsg({ ok: false, text: "Error al guardar" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const baseSelect = "w-full h-[42px] px-3 bg-[#fafaf8] border border-[#e4e4e0] rounded-[12px] text-[13px] font-semibold text-[#1a1a1a] outline-none focus:border-[#3dbb78] focus:ring-2 focus:ring-[#3dbb78]/20 appearance-none cursor-pointer transition-all";
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 text-[12px] font-extrabold text-[#3dbb78] hover:underline transition-all"
+        style={{ fontFamily: font }}
+      >
+        <ChevronDown size={12} strokeWidth={2.5} />
+        {currentNombre ? "Cambiar" : "Elegir equipo"}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 pt-1">
+      {ligas.length > 1 && (
+        <select className={baseSelect} style={{ fontFamily: font }} value={ligaId} onChange={(e) => { setLigaId(e.target.value); setSelectedId(""); }}>
+          <option value="">Liga...</option>
+          {ligas.map((l) => <option key={l.id} value={l.id}>{l.nombre}</option>)}
+        </select>
+      )}
+      <select className={baseSelect} style={{ fontFamily: font }} value={selectedId} onChange={(e) => setSelectedId(e.target.value)} disabled={!ligaId || loading}>
+        <option value="">{loading ? "Cargando..." : "Sin equipo"}</option>
+        {equipos.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+      </select>
+      {msg && (
+        <span className={`text-[11px] font-bold ${msg.ok ? "text-[#3dbb78]" : "text-[#b91c1c]"}`} style={{ fontFamily: font }}>
+          {msg.text}
+        </span>
+      )}
+      <div className="flex gap-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex-1 h-8 bg-[#1a1a1a] text-white text-[12px] font-extrabold rounded-full hover:bg-[#333] transition-colors disabled:opacity-50"
+          style={{ fontFamily: font }}
+        >
+          {saving ? "Guardando..." : "Guardar"}
+        </button>
+        <button
+          onClick={() => { setOpen(false); setMsg(null); }}
+          className="px-4 h-8 text-[12px] font-bold text-[#6b6b6b] border border-[#e4e4e0] rounded-full hover:bg-[#f2f2ef] transition-colors"
+          style={{ fontFamily: font }}
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Página de perfil ─────────────────────────────────────────────────────────
 export default function PerfilPage() {
   const navigate = useNavigate();
@@ -562,7 +656,6 @@ export default function PerfilPage() {
                   { label: "Correo", value: perfil?.correo || user?.correo || "—" },
                   { label: "Fecha de nacimiento", value: formatFecha(perfil?.fecha_nacimiento) },
                   { label: "Miembro desde", value: formatFecha(perfil?.fecha_creacion) },
-                  { label: "Equipo favorito", value: perfil?.equipo_favorito_nombre || "Sin equipo" },
                 ].map((r) => (
                   <div key={r.label} className="flex justify-between items-center py-2.5 border-t border-[#e4e4e0]">
                     <span className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>
@@ -576,6 +669,22 @@ export default function PerfilPage() {
                     </span>
                   </div>
                 ))}
+                {/* Equipo favorito — editable */}
+                <div className="flex flex-col py-2.5 border-t border-[#e4e4e0] gap-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] font-bold text-[#6b6b6b]" style={{ fontFamily: font }}>
+                      Equipo favorito
+                    </span>
+                    <span className="text-[13px] font-semibold text-[#1a1a1a]" style={{ fontFamily: font }}>
+                      {perfil?.equipo_favorito_nombre || "Sin equipo"}
+                    </span>
+                  </div>
+                  <EquipoEdit
+                    currentId={perfil?.equipo_favorito || ""}
+                    currentNombre={perfil?.equipo_favorito_nombre || ""}
+                    onSaved={(updated) => setPerfil((p) => ({ ...p, ...updated }))}
+                  />
+                </div>
                 <div className="flex flex-col gap-2 mt-4">
                   <button
                     onClick={handleLogout}

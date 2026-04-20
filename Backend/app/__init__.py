@@ -70,6 +70,18 @@ def create_app():
         resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         resp.headers["X-XSS-Protection"] = "1; mode=block"
         resp.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
+        # HSTS — fuerza HTTPS en navegadores (solo efectivo en producción con TLS)
+        resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # CSP — restringe de dónde puede cargar recursos el navegador
+        resp.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
         return resp
 
     # ── JWT error handlers ────────────────────────────────────────────────────

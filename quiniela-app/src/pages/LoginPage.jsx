@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { Navbar, InputField, PrimaryButton, HERO_BG } from "../components";
 import { useStore } from "../store";
 import { authService } from "../services/authService";
@@ -153,6 +154,16 @@ export default function LoginPage() {
             <PrimaryButton onClick={handleLogin} disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </PrimaryButton>
+
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-[12px] font-semibold text-[#6b6b6b] hover:text-[#3dbb78] transition-colors"
+                style={{ fontFamily: "Nunito, sans-serif" }}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
 
             {/* Divider */}
             <div className="flex items-center gap-3">
