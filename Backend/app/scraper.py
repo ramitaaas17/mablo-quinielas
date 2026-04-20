@@ -5,27 +5,14 @@ Usa SofaScore API pública (sin API key requerida).
 import time
 import datetime
 import logging
-import requests
+from curl_cffi import requests as cffi_requests
 
 logger = logging.getLogger(__name__)
 
 SOFASCORE_BASE = "https://api.sofascore.com/api/v1"
 SOFASCORE_TID  = 11620   # Liga MX unique-tournament ID
 
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/123.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "es-MX,es;q=0.9",
-    "Origin": "https://www.sofascore.com",
-    "Referer": "https://www.sofascore.com/",
-    "Cache-Control": "no-cache",
-}
-
-_session      = requests.Session()
+_session      = cffi_requests.Session(impersonate="chrome110")
 _season_cache = None
 
 
@@ -33,11 +20,11 @@ _season_cache = None
 
 def _get_json(url: str) -> dict | None:
     try:
-        r = _session.get(url, headers=_HEADERS, timeout=15)
+        r = _session.get(url, timeout=15)
         if r.status_code == 429:
             logger.warning("[scraper] Rate limit SofaScore — esperando 5s")
             time.sleep(5)
-            r = _session.get(url, headers=_HEADERS, timeout=15)
+            r = _session.get(url, timeout=15)
         r.raise_for_status()
         return r.json()
     except Exception as e:
