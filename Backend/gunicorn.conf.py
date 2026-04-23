@@ -30,3 +30,9 @@ max_requests_jitter = 100
 
 # Preload app for faster worker spawning and shared memory
 preload_app = True
+
+
+def post_fork(server, worker):
+    """Dispose SQLAlchemy connection pool after fork to prevent stale connections."""
+    from app.extensions import db
+    db.engine.dispose(close=False)
