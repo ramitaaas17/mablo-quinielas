@@ -34,5 +34,10 @@ preload_app = True
 
 def post_fork(server, worker):
     """Dispose SQLAlchemy connection pool after fork to prevent stale connections."""
-    from app.extensions import db
-    db.engine.dispose(close=False)
+    try:
+        from main import app
+        with app.app_context():
+            from app.extensions import db
+            db.engine.dispose(close=False)
+    except Exception:
+        pass
