@@ -270,7 +270,7 @@ def crear_quiniela():
             nombre=data['nombre'],
             id_liga=data['id_liga'],
             inicio=datetime.datetime.now(),
-            cierre=datetime.datetime.fromisoformat(data['cierre']),
+            cierre=datetime.datetime.fromisoformat(data['cierre']).astimezone(datetime.timezone.utc).replace(tzinfo=None),
             precio_entrada=float(data['precio_entrada']),
             comision=float(data['comision']),
             estado='abierta',

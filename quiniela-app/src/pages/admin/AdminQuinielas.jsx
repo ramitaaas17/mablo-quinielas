@@ -139,7 +139,7 @@ export default function AdminQuinielas({ onNavigate }) {
       await adminService.crearQuiniela({
         nombre: createData.nombre,
         id_liga: createData.id_liga,
-        cierre: createData.cierre,
+        cierre: new Date(createData.cierre).toISOString(),
         precio_entrada: parseFloat(createData.precio_entrada),
         comision: parseFloat(createData.comision || 0),
         imagen_fondo: createData.imagen_fondo || null,
