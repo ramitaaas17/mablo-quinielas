@@ -187,6 +187,11 @@ export const adminService = {
     return data;
   },
 
+  actualizarMarcador: async (id_partido, goles_local, goles_visitante) => {
+    const { data } = await apiClient.patch(`/admin/partidos/${id_partido}/marcador`, { goles_local, goles_visitante });
+    return data;
+  },
+
   // Usuarios
   getUsuarios: async () => {
     const { data } = await apiClient.get('/admin/usuarios');

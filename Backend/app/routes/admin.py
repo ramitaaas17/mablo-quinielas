@@ -697,6 +697,37 @@ def importar_partidos(id_quiniela):
         return jsonify({"error": str(e)}), 500
 
 
+@admin_bp.route('/partidos/<id_partido>/marcador', methods=['PATCH'])
+@admin_required
+def actualizar_marcador(id_partido):
+    """Permite al admin ingresar o corregir el marcador de un partido manualmente."""
+    partido = Partido.query.get_or_404(id_partido)
+    q = Quiniela.query.get(partido.id_quiniela)
+    if q and q.estado == 'resuelta':
+        return jsonify({"error": "La quiniela ya fue resuelta"}), 400
+    if partido.cancelado:
+        return jsonify({"error": "El partido está cancelado"}), 400
+
+    data = request.get_json(silent=True) or {}
+    g_local   = data.get('goles_local')
+    g_visita  = data.get('goles_visitante')
+
+    if g_local is None or g_visita is None:
+        return jsonify({"error": "Se requieren goles_local y goles_visitante"}), 400
+    try:
+        g_local  = int(g_local)
+        g_visita = int(g_visita)
+        if g_local < 0 or g_visita < 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return jsonify({"error": "Los goles deben ser números enteros no negativos"}), 400
+
+    partido.ptos_local     = g_local
+    partido.ptos_visitante = g_visita
+    db.session.commit()
+    return jsonify({"mensaje": "Marcador actualizado", "partido": _format_partido_admin(partido)}), 200
+
+
 @admin_bp.route('/partidos/<id_partido>/cancelar', methods=['PATCH'])
 @admin_required
 def cancelar_partido(id_partido):

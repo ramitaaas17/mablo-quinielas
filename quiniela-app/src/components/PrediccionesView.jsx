@@ -16,6 +16,21 @@ function getResult(ptos_local, ptos_visitante) {
   return "E";
 }
 
+/** Format date ISO to local date string like "20/04 15:00" */
+function formatLocalDate(isoString) {
+  if (!isoString) return "";
+  try {
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month} ${hours}:${minutes}`;
+  } catch {
+    return isoString;
+  }
+}
+
 /* ─── Confetti celebration ────────────────────────────────────────── */
 
 const CONFETTI_COLORS = [
@@ -560,7 +575,7 @@ export function PrediccionesView({
                         </span>
                       )}
                       <span className="text-[11px] font-semibold text-[#a0a0a0]" style={{ fontFamily: font }}>
-                        {p.fecha}
+                        {formatLocalDate(p.inicio)}
                       </span>
                     </div>
                   </div>
@@ -625,9 +640,9 @@ export function PrediccionesView({
                 </div>
 
                 {/* Botón Comodín x2 */}
-                {!matchFinished && partidos.length >= 3 && arrSeleccion.length < 2 && (!wildcardMatchId || wildcardMatchId !== String(p.id)) && (
-                  <button 
-                    onClick={() => toggleX2(quiniela.id, String(p.id), partidos.length)}
+                {!matchFinished && !isClosed && partidos.length >= 3 && arrSeleccion.length < 2 && (!wildcardMatchId || wildcardMatchId !== String(p.id)) && (
+                  <button
+                    onClick={() => toggleX2(quiniela.id, String(p.id), partidos.length, quiniela.cierreIso)}
                     className={cn(
                       "mt-1 w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-[10px] border text-[11px] font-bold transition-all duration-200",
                       x2MatchId === String(p.id) 

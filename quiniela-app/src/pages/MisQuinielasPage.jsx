@@ -43,9 +43,9 @@ function ResultadosModal({ idQuiniela, onClose }) {
   }, [idQuiniela]);
 
   const selColor = (sel) => {
-    if (sel === "Local")     return { bg: "var(--green-pale)", text: "var(--green-dk)" };
-    if (sel === "Visitante") return { bg: "var(--orange-pale)", text: "var(--orange-text)" };
-    if (sel === "Empate")    return { bg: "var(--surface-2)", text: "var(--text-2)" };
+    if (sel === "L" || sel === "Local")     return { bg: "var(--green-pale)", text: "var(--green-dk)" };
+    if (sel === "V" || sel === "Visitante") return { bg: "var(--orange-pale)", text: "var(--orange-text)" };
+    if (sel === "E" || sel === "Empate")    return { bg: "var(--surface-2)", text: "var(--text-2)" };
     return null;
   };
 
@@ -147,7 +147,7 @@ function ResultadosModal({ idQuiniela, onClose }) {
                             className="px-2 py-0.5 rounded-full text-[10px] font-extrabold"
                             style={{ background: rb.bg, color: rb.text }}
                           >
-                            {miSel === "Local" ? "L" : miSel === "Visitante" ? "V" : "E"}
+                            {miSel === "L" || miSel === "Local" ? "L" : miSel === "V" || miSel === "Visitante" ? "V" : "E"}
                           </span>
                           {miSel2 && (
                             <span

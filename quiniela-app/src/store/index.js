@@ -128,13 +128,19 @@ export const useStore = create(
         });
       },
 
-      toggleX2: (quinielaId, partidoId, totalPartidos) => {
+      toggleX2: (quinielaId, partidoId, totalPartidos, quinielaCierreIso = null) => {
         set((state) => {
           if (totalPartidos < 3) return state; // No permitido
 
+          // Verificar si la quiniela ya cerró
+          if (quinielaCierreIso) {
+            const cierreTime = new Date(quinielaCierreIso).getTime();
+            if (Date.now() > cierreTime) return state; // Ya cerró, no permitir cambios
+          }
+
           const quinielaPreds = state.misPredicciones[quinielaId] || {};
           const currentPicks = quinielaPreds[partidoId] || [];
-          
+
           if (Array.isArray(currentPicks) && currentPicks.length === 2) {
             return state; // Mutualmente excluyente con selección doble
           }

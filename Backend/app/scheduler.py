@@ -83,17 +83,17 @@ def actualizar_marcadores(app) -> None:
             from .models    import Partido, Quiniela, Equipo
             from . import scraper
 
-            ahora   = datetime.datetime.now()
-            hace_5h = ahora - datetime.timedelta(hours=5)
+            ahora      = datetime.datetime.now()
+            hace_7dias = ahora - datetime.timedelta(days=7)
 
             # Partidos que podrían estar en vivo o recién terminados:
-            # iniciaron hace ≤ 5h y pertenecen a quinielas no resueltas
+            # iniciaron en los últimos 7 días y pertenecen a quinielas no resueltas
             partidos = (
                 db.session.query(Partido)
                 .join(Quiniela, Partido.id_quiniela == Quiniela.id_quiniela)
                 .filter(
                     Partido.cancelado  == False,
-                    Partido.inicio     >= hace_5h,
+                    Partido.inicio     >= hace_7dias,
                     Partido.inicio     <= ahora,
                     Quiniela.estado    != 'resuelta',
                 )

@@ -20,9 +20,19 @@ const tipoColor = {
 
 function estadoPartido(p) {
   if (p.cancelado) return "cancelado";
+  // Primero verificar si hay marcador real - esto indica partido finalizado o en vivo
+  if (p.ptos_local !== null && p.ptos_visitante !== null) {
+    // Hay marcador, verificar si es en vivo o finalizado
+    const inicio = new Date(p.inicio);
+    const ahora  = new Date();
+    const diff   = (ahora - inicio) / 1000 / 60; // minutos desde el inicio
+    if (diff >= 0 && diff < 115) return "en_vivo";
+    return "finalizado";
+  }
+  // Sin marcador - verificar por tiempo
   const inicio = new Date(p.inicio);
   const ahora  = new Date();
-  const diff   = (ahora - inicio) / 1000 / 60; // minutos desde el inicio
+  const diff   = (ahora - inicio) / 1000 / 60;
   if (diff < 0)   return "pendiente";
   if (diff < 115) return "en_vivo";
   return "finalizado";
@@ -88,6 +98,8 @@ export default function AdminResultados({ onNavigate }) {
     setResolverLoading(false);
   };
 
+  const [marcadorEdit, setMarcadorEdit] = useState({}); // { [id_partido]: { local: "", visitante: "", loading: false, error: "" } }
+
   const handleCancelarPartido = async (id_partido) => {
     try {
       await adminService.cancelarPartido(id_partido);
@@ -100,6 +112,41 @@ export default function AdminResultados({ onNavigate }) {
       await adminService.descancelarPartido(id_partido);
       cargar();
     } catch { }
+  };
+
+  const abrirMarcador = (p) => {
+    setMarcadorEdit(prev => ({
+      ...prev,
+      [p.id]: {
+        local:     p.ptos_local     !== null ? String(p.ptos_local)     : "",
+        visitante: p.ptos_visitante !== null ? String(p.ptos_visitante) : "",
+        loading: false,
+        error: "",
+      },
+    }));
+  };
+
+  const cerrarMarcador = (id) => {
+    setMarcadorEdit(prev => { const next = { ...prev }; delete next[id]; return next; });
+  };
+
+  const guardarMarcador = async (id_partido) => {
+    const ed = marcadorEdit[id_partido];
+    if (!ed) return;
+    const gl = parseInt(ed.local, 10);
+    const gv = parseInt(ed.visitante, 10);
+    if (isNaN(gl) || isNaN(gv) || gl < 0 || gv < 0) {
+      setMarcadorEdit(prev => ({ ...prev, [id_partido]: { ...prev[id_partido], error: "Ingresa números válidos (≥ 0)" } }));
+      return;
+    }
+    setMarcadorEdit(prev => ({ ...prev, [id_partido]: { ...prev[id_partido], loading: true, error: "" } }));
+    try {
+      await adminService.actualizarMarcador(id_partido, gl, gv);
+      cerrarMarcador(id_partido);
+      cargar();
+    } catch (err) {
+      setMarcadorEdit(prev => ({ ...prev, [id_partido]: { ...prev[id_partido], loading: false, error: err?.response?.data?.error || "Error al guardar" } }));
+    }
   };
 
   const abrirPredicciones = async () => {
@@ -258,8 +305,8 @@ export default function AdminResultados({ onNavigate }) {
                         {/* Visitante */}
                         <div className="text-[14px] font-semibold text-[#1a1a1a] truncate">{p.visitante_nombre}</div>
 
-                        {/* Estado */}
-                        <div className="flex justify-end gap-1.5 items-center">
+                        {/* Estado + acciones */}
+                        <div className="flex justify-end gap-1.5 items-center flex-wrap">
                           {p.cancelado ? (
                             <div className="flex items-center gap-1">
                               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#b91c1c]">Cancelado</span>
@@ -292,7 +339,53 @@ export default function AdminResultados({ onNavigate }) {
                               )}
                             </div>
                           ) : null}
+                          {/* Botón editar marcador manual */}
+                          {quiniela.estado !== 'resuelta' && !p.cancelado && !marcadorEdit[p.id] && (
+                            <button
+                              onClick={() => abrirMarcador(p)}
+                              className="h-5 px-1.5 rounded-full border border-[#e4e4e0] text-[9px] font-extrabold text-[#6b6b6b] hover:bg-[#f2f2ef] transition-colors"
+                              title="Ingresar marcador manualmente"
+                            >
+                              ✎
+                            </button>
+                          )}
                         </div>
+                        {/* Formulario inline de marcador */}
+                        {marcadorEdit[p.id] && (
+                          <div className="col-span-5 mt-2 flex items-center gap-2 flex-wrap" style={{ fontFamily: font }}>
+                            <input
+                              type="number" min="0"
+                              value={marcadorEdit[p.id].local}
+                              onChange={e => setMarcadorEdit(prev => ({ ...prev, [p.id]: { ...prev[p.id], local: e.target.value } }))}
+                              placeholder="Local"
+                              className="w-16 h-7 border border-[#e4e4e0] rounded-[6px] px-2 text-[12px] font-bold text-center outline-none focus:border-[#1a1a1a]"
+                            />
+                            <span className="text-[11px] font-black text-[#6b6b6b]">-</span>
+                            <input
+                              type="number" min="0"
+                              value={marcadorEdit[p.id].visitante}
+                              onChange={e => setMarcadorEdit(prev => ({ ...prev, [p.id]: { ...prev[p.id], visitante: e.target.value } }))}
+                              placeholder="Visit."
+                              className="w-16 h-7 border border-[#e4e4e0] rounded-[6px] px-2 text-[12px] font-bold text-center outline-none focus:border-[#1a1a1a]"
+                            />
+                            <button
+                              onClick={() => guardarMarcador(p.id)}
+                              disabled={marcadorEdit[p.id].loading}
+                              className="h-7 px-3 bg-[#1a1a1a] text-white rounded-full text-[10px] font-extrabold hover:bg-[#333] transition-colors disabled:opacity-50"
+                            >
+                              {marcadorEdit[p.id].loading ? "..." : "Guardar"}
+                            </button>
+                            <button
+                              onClick={() => cerrarMarcador(p.id)}
+                              className="h-7 px-2 border border-[#e4e4e0] text-[#6b6b6b] rounded-full text-[10px] font-extrabold hover:bg-[#f2f2ef] transition-colors"
+                            >
+                              ✕
+                            </button>
+                            {marcadorEdit[p.id].error && (
+                              <span className="text-[10px] text-[#b91c1c] font-semibold">{marcadorEdit[p.id].error}</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -424,24 +517,34 @@ export default function AdminResultados({ onNavigate }) {
                           </td>
                           {partidos.map((p) => {
                             const pred = usr.predicciones?.find(pr => pr.id_partido === String(p.id));
-                            const sel = pred?.selecciones?.[0] || null;
+                            const sels = pred?.selecciones || [];
+                            const hasPred = sels.length > 0;
                             const correcto = pred?.es_correcta;
-                            const selColor = sel === "Local" ? { bg: "var(--green-pale)",  text: "var(--green-dk)" }
-                              : sel === "Visitante" ? { bg: "var(--orange-pale)", text: "var(--orange-text)" }
-                              : sel === "Empate" ? { bg: "var(--surface-2)",   text: "var(--text-2)" }
-                              : null;
+                            // Selections stored as "L"/"V"/"E" — map to display label and color
+                            const selLabel = (s) => s === "L" ? "L" : s === "V" ? "V" : s === "E" ? "E" : s;
+                            const selColor = (s) => s === "L" ? { bg: "var(--green-pale)",  text: "var(--green-dk)" }
+                              : s === "V" ? { bg: "var(--orange-pale)", text: "var(--orange-text)" }
+                              : { bg: "var(--surface-2)", text: "var(--text-2)" };
                             return (
                               <td key={p.id} className="px-2 py-2.5 border-b border-[#e4e4e0] text-center">
-                                {sel ? (
-                                  <span
-                                    className="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-extrabold"
-                                    style={{
-                                      background: correcto === true ? "var(--green-pale)" : correcto === false ? "var(--red-pale)" : selColor?.bg,
-                                      color: correcto === true ? "var(--green-dk)" : correcto === false ? "var(--red)" : selColor?.text,
-                                    }}
-                                  >
-                                    {sel === "Local" ? "L" : sel === "Visitante" ? "V" : "E"}
-                                  </span>
+                                {hasPred ? (
+                                  <div className="flex items-center justify-center gap-0.5">
+                                    {sels.map((s, si) => {
+                                      const c = selColor(s);
+                                      return (
+                                        <span
+                                          key={si}
+                                          className="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-extrabold"
+                                          style={{
+                                            background: correcto === true ? "var(--green-pale)" : correcto === false ? "var(--red-pale)" : c.bg,
+                                            color: correcto === true ? "var(--green-dk)" : correcto === false ? "var(--red)" : c.text,
+                                          }}
+                                        >
+                                          {selLabel(s)}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
                                 ) : (
                                   <span className="text-[#ccc] text-[10px]">—</span>
                                 )}
