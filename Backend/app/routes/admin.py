@@ -281,8 +281,10 @@ def crear_quiniela():
         return jsonify({"mensaje": "Quiniela creada", "id": str(q.id_quiniela)}), 201
     except ValueError as e:
         return jsonify({"error": f"Datos inválidos: {str(e)}"}), 400
-    except Exception:
+    except Exception as e:
         db.session.rollback()
+        import traceback
+        logging.getLogger(__name__).error("Error al crear quiniela: %s\n%s", e, traceback.format_exc())
         return jsonify({"error": "Error al crear quiniela"}), 500
 
 
