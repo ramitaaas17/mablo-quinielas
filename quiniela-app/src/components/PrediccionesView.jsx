@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import html2canvas from "html2canvas";
 import { useStore } from "../store";
 import { cn } from "../utils/cn";
 import { PrimaryButton } from "./Forms";
@@ -197,6 +198,74 @@ const BTN_COLORS = {
   },
 };
 
+/* ─── Share card (for screenshot) ────────────────────────────────── */
+function ShareCard({ quiniela, preds, userName }) {
+  const partidos = quiniela?.matches || [];
+  const f = "'Nunito', system-ui, -apple-system, sans-serif";
+  return (
+    <div style={{ width: 340, background: "white", borderRadius: 20, overflow: "hidden", fontFamily: f, boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)", padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(61,187,120,0.12)" }} />
+        <div style={{ position: "absolute", bottom: -10, right: 40, width: 60, height: 60, borderRadius: "50%", background: "rgba(61,187,120,0.08)" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, position: "relative" }}>
+          <span style={{ fontSize: 14, fontWeight: 900, color: "white", letterSpacing: "-0.3px" }}>Quiniepicks</span>
+          {userName && (
+            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.1)", borderRadius: 40, padding: "3px 10px" }}>
+              @{userName}
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 19, fontWeight: 900, color: "white", letterSpacing: "-0.5px", lineHeight: 1.1, position: "relative" }}>
+          {quiniela?.title}
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginTop: 4, position: "relative" }}>
+          {quiniela?.league} · Mis predicciones
+        </div>
+      </div>
+      {/* Matches */}
+      <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 5 }}>
+        {partidos.map((p, idx) => {
+          const picks = preds[p.id] || [];
+          const hasDouble = picks.length === 2;
+          return (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 7, background: "#fafaf8", borderRadius: 9, padding: "7px 9px", border: "1px solid #f0f0ec" }}>
+              <div style={{ width: 18, height: 18, borderRadius: 5, background: "#f2f2ef", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#6b6b6b", flexShrink: 0 }}>{idx + 1}</div>
+              <div style={{ flex: 1, minWidth: 0, fontSize: 10, fontWeight: 700, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {p.local} vs {p.visitante}
+              </div>
+              <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                {["L","E","V"].map(key => {
+                  const sel = picks.includes(key);
+                  return (
+                    <div key={key} style={{ width: 20, height: 20, borderRadius: 5, background: sel ? (key === "E" ? "#f4a030" : "#3dbb78") : "#eeeeea", color: sel ? "white" : "#bbb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 900 }}>
+                      {key}
+                    </div>
+                  );
+                })}
+              </div>
+              {hasDouble && (
+                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#f4a030", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 7, color: "white", fontWeight: 900 }}>★</div>
+              )}
+            </div>
+          );
+        })}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, paddingTop: 8, borderTop: "1px solid #f0f0ec" }}>
+          <div style={{ display: "flex", gap: 10 }}>
+            {[["#3dbb78","Local / Visit."],["#f4a030","Empate"]].map(([c,l]) => (
+              <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />
+                <span style={{ fontSize: 8, fontWeight: 700, color: "#6b6b6b" }}>{l}</span>
+              </div>
+            ))}
+          </div>
+          <span style={{ fontSize: 8, fontWeight: 700, color: "#bbb" }}>quiniepicks.app</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main component ──────────────────────────────────────────────── */
 export function PrediccionesView({
   quiniela,
@@ -205,12 +274,15 @@ export function PrediccionesView({
   onSolicitarUnirme = null,
   isJoining = false,
 }) {
-  const { misPredicciones, guardarPrediccion, misX2, toggleX2, hasUnsavedChanges, setHasUnsavedChanges } = useStore();
+  const { misPredicciones, guardarPrediccion, misX2, toggleX2, hasUnsavedChanges, setHasUnsavedChanges, user } = useStore();
   const [saving, setSaving]           = useState(false);
   const [saveMsg, setSaveMsg]         = useState("");
   const [saveMsgType, setSaveMsgType] = useState("success"); // "success" | "error"
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showShare, setShowShare]     = useState(false);
+  const [sharing, setSharing]         = useState(false);
   const celebrationFired = useRef(false);
+  const shareCardRef = useRef(null);
 
   if (!quiniela) return null;
 
@@ -253,6 +325,30 @@ export function PrediccionesView({
       return () => clearTimeout(t);
     }
   }, [isPerfect]);
+
+  /* ── Share handler ── */
+  const handleShare = async () => {
+    const node = shareCardRef.current;
+    if (!node || sharing) return;
+    setSharing(true);
+    try {
+      const canvas = await html2canvas(node, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
+      canvas.toBlob(async (blob) => {
+        if (!blob) { setSharing(false); return; }
+        const file = new File([blob], "predicciones.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: `Mis predicciones — ${quiniela.title}` });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = `predicciones-${quiniela.title}.png`;
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+        setSharing(false);
+      }, "image/png");
+    } catch { setSharing(false); }
+  };
 
   /* ── Handlers ── */
   const handlePredict = (partidoId, pick) => {
@@ -835,10 +931,62 @@ export function PrediccionesView({
               >
                 {saving ? "Guardando..." : quiniela.status === "resuelta" ? "Quiniela finalizada" : isClosed ? "Plazo de votación cerrado" : "Guardar mis predicciones"}
               </PrimaryButton>
+              {totalPredicciones > 0 && (
+                <button
+                  onClick={() => setShowShare(true)}
+                  className="w-full h-10 flex items-center justify-center gap-2 rounded-full border border-[#e4e4e0] text-[12px] font-extrabold text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] transition-colors"
+                  style={{ fontFamily: font }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                  Compartir predicciones
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Share modal */}
+      {showShare && (
+        <div
+          className="fixed inset-0 z-[150] flex items-center justify-center p-5 bg-black/75 backdrop-blur-sm"
+          onClick={() => setShowShare(false)}
+        >
+          <div className="flex flex-col items-center gap-4 w-full max-w-[360px]" onClick={e => e.stopPropagation()}>
+            <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider" style={{ fontFamily: font }}>
+              Vista previa · toca para compartir
+            </p>
+            <div ref={shareCardRef}>
+              <ShareCard quiniela={quiniela} preds={preds} userName={user?.username} />
+            </div>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setShowShare(false)}
+                className="flex-1 h-11 rounded-full border border-white/20 text-white text-[13px] font-extrabold hover:bg-white/10 transition-colors"
+                style={{ fontFamily: font }}
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={handleShare}
+                disabled={sharing}
+                className="flex-[2] h-11 rounded-full bg-[#3dbb78] text-white text-[13px] font-extrabold hover:bg-[#25854f] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                style={{ fontFamily: font }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                {sharing ? "Generando..." : "Descargar / Compartir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

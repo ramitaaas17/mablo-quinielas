@@ -81,9 +81,20 @@ export default function TablaPage() {
         };
         setQuiniela(quinielaFormatted);
 
-        // Cargar posiciones
+        // Cargar posiciones con delta de cambio de posición
         const pos = await quinielaService.getPosiciones(q.id).catch(() => []);
-        if (mounted) setPosiciones(pos);
+        if (mounted) {
+          const prevKey = `pos_prev_${q.id}`;
+          const prevMap = JSON.parse(localStorage.getItem(prevKey) || '{}');
+          const withDelta = pos.map(p => ({
+            ...p,
+            delta: prevMap[p.id_usr] != null ? prevMap[p.id_usr] - p.pos : null,
+          }));
+          const newMap = {};
+          pos.forEach(p => { newMap[p.id_usr] = p.pos; });
+          localStorage.setItem(prevKey, JSON.stringify(newMap));
+          setPosiciones(withDelta);
+        }
 
         // Cargar estado
         try {
@@ -286,17 +297,29 @@ export default function TablaPage() {
                   )}
 
                   {posiciones.map((p, rowIdx) => {
+                    const medals = ["🥇", "🥈", "🥉"];
                     const posColors = ["#f4a030", "#6b6b6b", "#b87333"];
                     const color = posColors[p.pos - 1] || "#1a1a1a";
                     const pct = numPartidos > 0 ? (p.puntos_total / numPartidos) * 100 : 0;
+                    const isTop3 = p.pos <= 3;
                     return (
                       <div
                         key={p.id_usr}
                         className="grid grid-cols-[50px_1fr_100px_1fr] md:grid-cols-[65px_1fr_120px_1fr] items-center border-b border-[#e4e4e0] last:border-b-0 py-3 transition-colors hover:bg-[#fafaf8] animate-fade-in"
-                        style={{ animationDelay: `${rowIdx * 40 + 100}ms` }}
+                        style={{ animationDelay: `${rowIdx * 40 + 100}ms`, background: isTop3 ? `${["#fffbf0","#fafafa","#fff9f5"][p.pos-1]}` : undefined }}
                       >
-                        <div className="px-4 text-[14px] font-black" style={{ fontFamily: font, color }}>
-                          {p.pos}
+                        <div className="px-4 flex flex-col items-start" style={{ fontFamily: font }}>
+                          <span className="text-[14px] font-black" style={{ color }}>
+                            {medals[p.pos - 1] || p.pos}
+                          </span>
+                          {p.delta != null && p.delta !== 0 && (
+                            <span className="text-[9px] font-black leading-none mt-0.5" style={{ color: p.delta > 0 ? '#25854f' : '#ef4444' }}>
+                              {p.delta > 0 ? `↑${p.delta}` : `↓${Math.abs(p.delta)}`}
+                            </span>
+                          )}
+                          {p.delta === 0 && (
+                            <span className="text-[9px] font-bold text-[#aaa] leading-none mt-0.5">—</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 px-2">
                           <Avatar foto={p.foto_perfil} iniciales={p.initials} size={28} border={2} fontSize={10} />
