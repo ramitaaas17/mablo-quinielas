@@ -199,67 +199,87 @@ const BTN_COLORS = {
 };
 
 /* ─── Share card (for screenshot) ────────────────────────────────── */
-function ShareCard({ quiniela, preds, userName }) {
+function ShareCard({ quiniela, preds, userName, x2MatchId }) {
   const partidos = quiniela?.matches || [];
-  const f = "'Nunito', system-ui, -apple-system, sans-serif";
+  const f = "system-ui, -apple-system, Arial, sans-serif";
+  const btn = (sel, key) => ({
+    width: 24, height: 24, minWidth: 24, maxWidth: 24, minHeight: 24, maxHeight: 24,
+    borderRadius: 6, flexShrink: 0, flexGrow: 0,
+    background: sel ? (key === "E" ? "#f4a030" : "#3dbb78") : "#e8e8e4",
+    color: sel ? "white" : "#aaa",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: 9, fontWeight: 800, lineHeight: "24px", boxSizing: "border-box",
+  });
   return (
     <div style={{ width: 340, background: "white", borderRadius: 20, overflow: "hidden", fontFamily: f, boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)", padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(61,187,120,0.12)" }} />
-        <div style={{ position: "absolute", bottom: -10, right: 40, width: 60, height: 60, borderRadius: "50%", background: "rgba(61,187,120,0.08)" }} />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, position: "relative" }}>
-          <span style={{ fontSize: 14, fontWeight: 900, color: "white", letterSpacing: "-0.3px" }}>Quiniepicks</span>
+      <div style={{ background: "#1a1a1a", padding: "18px 18px 14px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "white" }}>Quiniepicks</span>
           {userName && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.1)", borderRadius: 40, padding: "3px 10px" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.1)", borderRadius: 40, padding: "3px 10px" }}>
               @{userName}
             </span>
           )}
         </div>
-        <div style={{ fontSize: 19, fontWeight: 900, color: "white", letterSpacing: "-0.5px", lineHeight: 1.1, position: "relative" }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "white", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
           {quiniela?.title}
         </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginTop: 4, position: "relative" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
           {quiniela?.league} · Mis predicciones
         </div>
       </div>
+
       {/* Matches */}
-      <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 5 }}>
+      <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
         {partidos.map((p, idx) => {
           const picks = preds[p.id] || [];
           const hasDouble = picks.length === 2;
+          const isX2 = String(p.id) === String(x2MatchId);
           return (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 7, background: "#fafaf8", borderRadius: 9, padding: "7px 9px", border: "1px solid #f0f0ec" }}>
-              <div style={{ width: 18, height: 18, borderRadius: 5, background: "#f2f2ef", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#6b6b6b", flexShrink: 0 }}>{idx + 1}</div>
+            <div key={p.id} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: isX2 ? "#f0fdf4" : "#f8f8f6",
+              borderRadius: 8, padding: "7px 10px",
+              border: `1px solid ${isX2 ? "#bbf0d8" : "#ececea"}`,
+              boxSizing: "border-box",
+            }}>
+              {/* Número */}
+              <div style={{ width: 18, height: 18, minWidth: 18, borderRadius: 5, background: "#eeecea", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#888", flexShrink: 0 }}>
+                {idx + 1}
+              </div>
+              {/* Nombre partido */}
               <div style={{ flex: 1, minWidth: 0, fontSize: 10, fontWeight: 700, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {p.local} vs {p.visitante}
               </div>
-              <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
-                {["L","E","V"].map(key => {
-                  const sel = picks.includes(key);
-                  return (
-                    <div key={key} style={{ width: 20, height: 20, borderRadius: 5, background: sel ? (key === "E" ? "#f4a030" : "#3dbb78") : "#eeeeea", color: sel ? "white" : "#bbb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 900 }}>
-                      {key}
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Badges comodín */}
               {hasDouble && (
-                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#f4a030", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 7, color: "white", fontWeight: 900 }}>★</div>
+                <div style={{ width: 16, height: 16, minWidth: 16, borderRadius: "50%", background: "#f4a030", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, color: "white", fontWeight: 800 }}>★</div>
               )}
+              {isX2 && !hasDouble && (
+                <div style={{ minWidth: 20, height: 16, borderRadius: 4, background: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, color: "white", fontWeight: 800, padding: "0 3px" }}>×2</div>
+              )}
+              {/* Botones L E V */}
+              <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                {["L","E","V"].map(key => (
+                  <div key={key} style={btn(picks.includes(key), key)}>{key}</div>
+                ))}
+              </div>
             </div>
           );
         })}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, paddingTop: 8, borderTop: "1px solid #f0f0ec" }}>
+
+        {/* Footer */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, paddingTop: 8, borderTop: "1px solid #ececea" }}>
           <div style={{ display: "flex", gap: 10 }}>
-            {[["#3dbb78","Local / Visit."],["#f4a030","Empate"]].map(([c,l]) => (
+            {[["#3dbb78","L / V  Local o Visitante"],["#f4a030","E  Empate"]].map(([c,l]) => (
               <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />
-                <span style={{ fontSize: 8, fontWeight: 700, color: "#6b6b6b" }}>{l}</span>
+                <div style={{ width: 8, height: 8, minWidth: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
+                <span style={{ fontSize: 8, fontWeight: 700, color: "#888" }}>{l}</span>
               </div>
             ))}
           </div>
-          <span style={{ fontSize: 8, fontWeight: 700, color: "#bbb" }}>quiniepicks.app</span>
+          <span style={{ fontSize: 8, fontWeight: 600, color: "#bbb" }}>quiniepicks.app</span>
         </div>
       </div>
     </div>
@@ -774,7 +794,7 @@ export function PrediccionesView({
                     ) : (
                       <>
                         <span className="text-[13px] font-black leading-none">×2</span>
-                        <span className="tracking-wide">Usar Comodín ×2 aquí</span>
+                        <span className="tracking-wide">Puntos dobles</span>
                       </>
                     )}
                   </button>
@@ -960,7 +980,7 @@ export function PrediccionesView({
               Vista previa · toca para compartir
             </p>
             <div ref={shareCardRef}>
-              <ShareCard quiniela={quiniela} preds={preds} userName={user?.username} />
+              <ShareCard quiniela={quiniela} preds={preds} userName={user?.username} x2MatchId={x2MatchId} />
             </div>
             <div className="flex gap-3 w-full">
               <button
