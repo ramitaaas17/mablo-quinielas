@@ -1024,7 +1024,7 @@ export function PrediccionesView({
           className="fixed inset-0 z-[150] flex items-center justify-center p-5 bg-black/75 backdrop-blur-sm"
           onClick={() => setShowShare(false)}
         >
-          <div className="flex flex-col items-center gap-4 w-full max-w-[360px]" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-col items-center gap-4 w-full max-w-[min(680px,90vw)]" onClick={e => e.stopPropagation()}>
             <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider" style={{ fontFamily: font }}>
               Vista previa · toca para compartir
             </p>
