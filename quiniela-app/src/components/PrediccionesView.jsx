@@ -324,7 +324,7 @@ export function PrediccionesView({
       <div className="flex flex-col lg:flex-row gap-8 w-full">
 
         {/* ── Partido list ──────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
 
           {/* Inscripción banners */}
           {isSinPago && !isPending && (
@@ -409,10 +409,10 @@ export function PrediccionesView({
           </div>
 
           {/* Comodines mini cards — una sola fila */}
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-2 w-full overflow-hidden">
             {/* Comodín Doble */}
             <div className={cn(
-              "flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all duration-200",
+              "flex-1 min-w-0 flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all duration-200 overflow-hidden",
               wildcardMatch ? "bg-[#fff8f0] border-[#f4a030]/50" : "bg-[#fafaf8] border-[#e4e4e0]"
             )}>
               <div className={cn(
@@ -439,7 +439,7 @@ export function PrediccionesView({
             {/* Comodín ×2 */}
             {partidos.length >= 3 && (
               <div className={cn(
-                "flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all duration-200",
+                "flex-1 min-w-0 flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all duration-200 overflow-hidden",
                 x2Match ? "bg-[#f0fdf4] border-[#3dbb78]/50" : "bg-[#fafaf8] border-[#e4e4e0]"
               )}>
                 <div className={cn(
