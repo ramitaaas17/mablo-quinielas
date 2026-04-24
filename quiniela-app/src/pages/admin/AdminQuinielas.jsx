@@ -62,8 +62,8 @@ export default function AdminQuinielas({ onNavigate }) {
         adminService.getQuinielas(),
         quinielaService.getLigas(),
       ]);
-      setQuinielas(qs);
-      setLigas(lg);
+      setQuinielas(Array.isArray(qs) ? qs : []);
+      setLigas(Array.isArray(lg) ? lg : []);
       if (!createData.id_liga && lg.length > 0) {
         setCreateData(d => ({ ...d, id_liga: lg[0].id }));
       }

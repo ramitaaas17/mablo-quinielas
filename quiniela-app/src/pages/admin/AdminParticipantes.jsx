@@ -31,11 +31,12 @@ export default function AdminParticipantes({ onNavigate }) {
         adminService.getUsuarios(),
         quinielaService.getLigas(),
       ]);
-      setUsuarios(us);
+      setUsuarios(Array.isArray(us) ? us : []);
 
-      if (ligas.length > 0) {
-        const eqs = await quinielaService.getEquipos(ligas[0].id);
-        setEquipos(eqs);
+      const ligasArr = Array.isArray(ligas) ? ligas : [];
+      if (ligasArr.length > 0) {
+        const eqs = await quinielaService.getEquipos(ligasArr[0].id);
+        setEquipos(Array.isArray(eqs) ? eqs : []);
       }
     } catch { }
     setLoading(false);

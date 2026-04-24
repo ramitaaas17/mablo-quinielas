@@ -42,8 +42,8 @@ export default function AdminDashboard({ onNavigate }) {
       ]);
       if (!mounted) return;
       setStats(s);
-      setQuinielas(q.filter(x => x.estado === 'abierta').slice(0, 3));
-      setActividad(a.slice(0, 8));
+      setQuinielas((Array.isArray(q) ? q : []).filter(x => x.estado === 'abierta').slice(0, 3));
+      setActividad((Array.isArray(a) ? a : []).slice(0, 8));
       setLoading(false);
     };
     cargar();
@@ -51,7 +51,7 @@ export default function AdminDashboard({ onNavigate }) {
     // Auto-refresh actividad cada 60s
     actividadRef.current = setInterval(() => {
       adminService.getActividad().catch(() => []).then(a => {
-        if (mounted) setActividad(a.slice(0, 8));
+        if (mounted) setActividad((Array.isArray(a) ? a : []).slice(0, 8));
       });
     }, 60_000);
 

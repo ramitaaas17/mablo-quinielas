@@ -35,8 +35,9 @@ export default function AdminPagos({ onNavigate }) {
 
   useEffect(() => {
     adminService.getQuinielas().then(qs => {
-      setQuinielas(qs);
-      if (qs.length > 0) setQuinielaId(qs[0].id);
+      const list = Array.isArray(qs) ? qs : [];
+      setQuinielas(list);
+      if (list.length > 0) setQuinielaId(list[0].id);
     }).catch(() => {});
   }, []);
 
@@ -45,7 +46,7 @@ export default function AdminPagos({ onNavigate }) {
     setLoading(true);
     try {
       const data = await adminService.getPagos(quinielaId);
-      setPagos(data);
+      setPagos(Array.isArray(data) ? data : []);
     } catch { setPagos([]); }
     setLoading(false);
   }, [quinielaId]);
