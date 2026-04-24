@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import html2canvas from "html2canvas";
 import { useStore } from "../store";
 import { cn } from "../utils/cn";
 import { PrimaryButton } from "./Forms";
@@ -198,92 +197,141 @@ const BTN_COLORS = {
   },
 };
 
-/* ─── Share card (for screenshot) ────────────────────────────────── */
-function ShareCard({ quiniela, preds, userName, x2MatchId }) {
+/* ─── Canvas-based share image generator ─────────────────────────── */
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function generateShareCanvas(quiniela, preds, x2MatchId, userName) {
   const partidos = quiniela?.matches || [];
-  const f = "system-ui, -apple-system, Arial, sans-serif";
-  const btn = (sel, key) => ({
-    width: 24, height: 24, minWidth: 24, maxWidth: 24, minHeight: 24, maxHeight: 24,
-    borderRadius: 6, flexShrink: 0, flexGrow: 0,
-    background: sel ? (key === "E" ? "#f4a030" : "#3dbb78") : "#e8e8e4",
-    color: sel ? "white" : "#aaa",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 9, fontWeight: 800, lineHeight: "24px", boxSizing: "border-box",
+  const F = "700 {S}px Arial, system-ui, sans-serif";
+  const sf = (s, w) => F.replace("{S}", s).replace("700", w || "700");
+
+  const W = 680, S = 2;
+  const HEADER = 148, ROW_H = 52, PAD = 14, FOOTER = 44;
+  const H = HEADER + PAD + partidos.length * ROW_H + PAD + FOOTER;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W * S; canvas.height = H * S;
+  const c = canvas.getContext("2d");
+  c.scale(S, S);
+
+  // ── Header ──
+  c.fillStyle = "#1a1a1a";
+  rr(c, 0, 0, W, H, 20); c.fill();
+  c.fillStyle = "white";
+  rr(c, 0, HEADER, W, H - HEADER, 0); c.fill();
+
+  // Accent circle
+  c.fillStyle = "rgba(61,187,120,0.13)";
+  c.beginPath(); c.arc(W - 50, 30, 90, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(W - 20, 110, 50, 0, Math.PI * 2); c.fill();
+
+  // Brand
+  c.fillStyle = "white"; c.font = sf(14, 800);
+  c.fillText("Quiniepicks", 24, 36);
+
+  // Username badge
+  if (userName) {
+    const lbl = `@${userName}`;
+    c.font = sf(11, 600);
+    const tw = c.measureText(lbl).width;
+    c.fillStyle = "rgba(255,255,255,0.12)";
+    rr(c, W - tw - 44, 20, tw + 24, 22, 11); c.fill();
+    c.fillStyle = "rgba(255,255,255,0.55)";
+    c.fillText(lbl, W - tw - 32, 35);
+  }
+
+  // Title
+  c.fillStyle = "white"; c.font = sf(24, 900);
+  c.fillText((quiniela?.title || "").slice(0, 32), 24, 88);
+
+  // Subtitle
+  c.fillStyle = "rgba(255,255,255,0.45)"; c.font = sf(12, 600);
+  c.fillText(`${quiniela?.league || ""} · Mis predicciones`, 24, 112);
+
+  // ── Rows ──
+  const BTN = 26, GAP = 5;
+  partidos.forEach((p, idx) => {
+    const picks = preds[p.id] || [];
+    const isX2 = String(p.id) === String(x2MatchId);
+    const hasDbl = picks.length === 2;
+    const ry = HEADER + PAD + idx * ROW_H;
+    const rh = ROW_H - 6;
+    const cx = ry + rh / 2;
+
+    // Row bg
+    c.fillStyle = isX2 ? "#ecfdf5" : "#f7f7f5";
+    c.strokeStyle = isX2 ? "#a7f3d0" : "#e8e8e4";
+    c.lineWidth = 1;
+    rr(c, 14, ry, W - 28, rh, 10); c.fill(); c.stroke();
+
+    // Number chip
+    c.fillStyle = "#e8e8e4";
+    rr(c, 24, cx - 10, 22, 20, 5); c.fill();
+    c.fillStyle = "#888"; c.font = sf(9, 800); c.textAlign = "center";
+    c.fillText(String(idx + 1), 35, cx + 4);
+
+    // Team name
+    c.fillStyle = "#1a1a1a"; c.font = sf(12, 700); c.textAlign = "left";
+    const rawName = `${p.local} vs ${p.visitante}`;
+    const maxW = W - 28 - 24 - 3 * (BTN + GAP) - (hasDbl || isX2 ? 30 : 0) - 80;
+    let name = rawName;
+    while (c.measureText(name).width > maxW && name.length > 4) name = name.slice(0, -1);
+    if (name.length < rawName.length) name += "…";
+    c.fillText(name, 54, cx + 4);
+
+    // L E V buttons — drawn right-aligned
+    const btnsRight = W - 18;
+    ["V","E","L"].forEach((key, ri) => {
+      const bx = btnsRight - (ri + 1) * (BTN + GAP) + GAP;
+      const by = cx - BTN / 2;
+      const sel = picks.includes(key);
+      c.fillStyle = sel ? (key === "E" ? "#f4a030" : "#3dbb78") : "#e0e0dc";
+      rr(c, bx, by, BTN, BTN, 7); c.fill();
+      c.fillStyle = sel ? "white" : "#aaa";
+      c.font = sf(10, 800); c.textAlign = "center";
+      c.fillText(key, bx + BTN / 2, by + BTN / 2 + 4);
+    });
+
+    // Comodín badges
+    const badgeRight = btnsRight - 3 * (BTN + GAP) - 2;
+    if (hasDbl) {
+      c.fillStyle = "#f4a030";
+      c.beginPath(); c.arc(badgeRight - 8, cx, 10, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "white"; c.font = sf(10, 900); c.textAlign = "center";
+      c.fillText("★", badgeRight - 8, cx + 4);
+    } else if (isX2) {
+      c.fillStyle = "#059669";
+      rr(c, badgeRight - 26, cx - 9, 24, 18, 5); c.fill();
+      c.fillStyle = "white"; c.font = sf(9, 800); c.textAlign = "center";
+      c.fillText("×2", badgeRight - 14, cx + 4);
+    }
+    c.textAlign = "left";
   });
-  return (
-    <div style={{ width: 340, background: "white", borderRadius: 20, overflow: "hidden", fontFamily: f, boxShadow: "0 12px 48px rgba(0,0,0,0.25)" }}>
-      {/* Header */}
-      <div style={{ background: "#1a1a1a", padding: "18px 18px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: "white" }}>Quiniepicks</span>
-          {userName && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.1)", borderRadius: 40, padding: "3px 10px" }}>
-              @{userName}
-            </span>
-          )}
-        </div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "white", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
-          {quiniela?.title}
-        </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
-          {quiniela?.league} · Mis predicciones
-        </div>
-      </div>
 
-      {/* Matches */}
-      <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
-        {partidos.map((p, idx) => {
-          const picks = preds[p.id] || [];
-          const hasDouble = picks.length === 2;
-          const isX2 = String(p.id) === String(x2MatchId);
-          return (
-            <div key={p.id} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              background: isX2 ? "#f0fdf4" : "#f8f8f6",
-              borderRadius: 8, padding: "7px 10px",
-              border: `1px solid ${isX2 ? "#bbf0d8" : "#ececea"}`,
-              boxSizing: "border-box",
-            }}>
-              {/* Número */}
-              <div style={{ width: 18, height: 18, minWidth: 18, borderRadius: 5, background: "#eeecea", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#888", flexShrink: 0 }}>
-                {idx + 1}
-              </div>
-              {/* Nombre partido */}
-              <div style={{ flex: 1, minWidth: 0, fontSize: 10, fontWeight: 700, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {p.local} vs {p.visitante}
-              </div>
-              {/* Badges comodín */}
-              {hasDouble && (
-                <div style={{ width: 16, height: 16, minWidth: 16, borderRadius: "50%", background: "#f4a030", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, color: "white", fontWeight: 800 }}>★</div>
-              )}
-              {isX2 && !hasDouble && (
-                <div style={{ minWidth: 20, height: 16, borderRadius: 4, background: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, color: "white", fontWeight: 800, padding: "0 3px" }}>×2</div>
-              )}
-              {/* Botones L E V */}
-              <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
-                {["L","E","V"].map(key => (
-                  <div key={key} style={btn(picks.includes(key), key)}>{key}</div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+  // ── Footer ──
+  const fy = HEADER + PAD + partidos.length * ROW_H + PAD + 8;
+  [["#3dbb78","L / V  Local o Visitante"], ["#f4a030","E  Empate"]].reduce((x, [col, lbl]) => {
+    c.fillStyle = col; c.beginPath(); c.arc(x + 5, fy + 5, 5, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#888"; c.font = sf(10, 700);
+    c.fillText(lbl, x + 14, fy + 9);
+    return x + 14 + c.measureText(lbl).width + 16;
+  }, 20);
+  c.fillStyle = "#bbb"; c.font = sf(10, 600); c.textAlign = "right";
+  c.fillText("quiniepicks.app", W - 20, fy + 9);
 
-        {/* Footer */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, paddingTop: 8, borderTop: "1px solid #ececea" }}>
-          <div style={{ display: "flex", gap: 10 }}>
-            {[["#3dbb78","L / V  Local o Visitante"],["#f4a030","E  Empate"]].map(([c,l]) => (
-              <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 8, height: 8, minWidth: 8, borderRadius: "50%", background: c, flexShrink: 0 }} />
-                <span style={{ fontSize: 8, fontWeight: 700, color: "#888" }}>{l}</span>
-              </div>
-            ))}
-          </div>
-          <span style={{ fontSize: 8, fontWeight: 600, color: "#bbb" }}>quiniepicks.app</span>
-        </div>
-      </div>
-    </div>
-  );
+  return canvas;
 }
 
 /* ─── Main component ──────────────────────────────────────────────── */
@@ -301,8 +349,8 @@ export function PrediccionesView({
   const [showCelebration, setShowCelebration] = useState(false);
   const [showShare, setShowShare]     = useState(false);
   const [sharing, setSharing]         = useState(false);
+  const [shareDataUrl, setShareDataUrl] = useState(null);
   const celebrationFired = useRef(false);
-  const shareCardRef = useRef(null);
 
   if (!quiniela) return null;
 
@@ -347,27 +395,28 @@ export function PrediccionesView({
   }, [isPerfect]);
 
   /* ── Share handler ── */
+  const openShareModal = () => {
+    const canvas = generateShareCanvas(quiniela, preds, x2MatchId, user?.username);
+    setShareDataUrl(canvas.toDataURL("image/png"));
+    setShowShare(true);
+  };
+
   const handleShare = async () => {
-    const node = shareCardRef.current;
-    if (!node || sharing) return;
+    if (!shareDataUrl || sharing) return;
     setSharing(true);
     try {
-      const canvas = await html2canvas(node, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
-      canvas.toBlob(async (blob) => {
-        if (!blob) { setSharing(false); return; }
-        const file = new File([blob], "predicciones.png", { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: `Mis predicciones — ${quiniela.title}` });
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url; a.download = `predicciones-${quiniela.title}.png`;
-          document.body.appendChild(a); a.click();
-          document.body.removeChild(a); URL.revokeObjectURL(url);
-        }
-        setSharing(false);
-      }, "image/png");
-    } catch { setSharing(false); }
+      const res = await fetch(shareDataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "predicciones.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Mis predicciones — ${quiniela.title}` });
+      } else {
+        const a = document.createElement("a");
+        a.href = shareDataUrl; a.download = `predicciones-${quiniela.title}.png`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+    } catch { /* user cancelled share */ }
+    setSharing(false);
   };
 
   /* ── Handlers ── */
@@ -953,7 +1002,7 @@ export function PrediccionesView({
               </PrimaryButton>
               {totalPredicciones > 0 && (
                 <button
-                  onClick={() => setShowShare(true)}
+                  onClick={openShareModal}
                   className="w-full h-10 flex items-center justify-center gap-2 rounded-full border border-[#e4e4e0] text-[12px] font-extrabold text-[#6b6b6b] hover:bg-[#f2f2ef] hover:text-[#1a1a1a] transition-colors"
                   style={{ fontFamily: font }}
                 >
@@ -979,9 +1028,9 @@ export function PrediccionesView({
             <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider" style={{ fontFamily: font }}>
               Vista previa · toca para compartir
             </p>
-            <div ref={shareCardRef}>
-              <ShareCard quiniela={quiniela} preds={preds} userName={user?.username} x2MatchId={x2MatchId} />
-            </div>
+            {shareDataUrl && (
+              <img src={shareDataUrl} alt="Mis predicciones" style={{ width: "100%", borderRadius: 16, display: "block", boxShadow: "0 8px 40px rgba(0,0,0,0.4)" }} />
+            )}
             <div className="flex gap-3 w-full">
               <button
                 onClick={() => setShowShare(false)}
