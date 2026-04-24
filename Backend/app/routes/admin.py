@@ -270,7 +270,7 @@ def crear_quiniela():
             nombre=data['nombre'],
             id_liga=data['id_liga'],
             inicio=datetime.datetime.now(),
-            cierre=datetime.datetime.fromisoformat(data['cierre']).astimezone(datetime.timezone.utc).replace(tzinfo=None),
+            cierre=datetime.datetime.fromisoformat(data['cierre'].replace('Z', '+00:00')).astimezone(datetime.timezone.utc).replace(tzinfo=None),
             precio_entrada=float(data['precio_entrada']),
             comision=float(data['comision']),
             estado='abierta',
@@ -279,12 +279,10 @@ def crear_quiniela():
         db.session.add(q)
         db.session.commit()
         return jsonify({"mensaje": "Quiniela creada", "id": str(q.id_quiniela)}), 201
-    except ValueError as e:
-        return jsonify({"error": f"Datos inválidos: {str(e)}"}), 400
-    except Exception as e:
+    except ValueError:
+        return jsonify({"error": "Datos inválidos. Revisa los campos e intenta de nuevo."}), 400
+    except Exception:
         db.session.rollback()
-        import traceback
-        logging.getLogger(__name__).error("Error al crear quiniela: %s\n%s", e, traceback.format_exc())
         return jsonify({"error": "Error al crear quiniela"}), 500
 
 
@@ -309,7 +307,7 @@ def editar_quiniela(id_quiniela):
     if 'nombre' in data:
         q.nombre = data['nombre']
     if 'cierre' in data:
-        q.cierre = datetime.datetime.fromisoformat(data['cierre'])
+        q.cierre = datetime.datetime.fromisoformat(data['cierre'].replace('Z', '+00:00')).astimezone(datetime.timezone.utc).replace(tzinfo=None)
     if 'precio_entrada' in data:
         nuevo_precio = float(data['precio_entrada'])
         if q.precio_entrada != nuevo_precio:
@@ -644,7 +642,15 @@ def importar_partidos(id_quiniela):
         for eq in equipos_liga:
             if match_nombre(nombre_scraper, eq.nombre):
                 return eq
-        # No existe: crear con nombre original del scraper
+        # Fuzzy match falló — buscar en DB por nombre exacto (case-insensitive)
+        eq_db = Equipo.query.filter(
+            Equipo.id_liga == q.id_liga,
+            db.func.lower(Equipo.nombre) == nombre_scraper.lower()
+        ).first()
+        if eq_db:
+            equipos_liga.append(eq_db)
+            return eq_db
+        # Realmente no existe: crear
         nuevo = Equipo(id_liga=q.id_liga, nombre=nombre_scraper)
         db.session.add(nuevo)
         db.session.flush()
@@ -694,9 +700,9 @@ def importar_partidos(id_quiniela):
             "ids": [str(p.id_partido) for p in creados],
             "errores": errores,
         }), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Error al importar partidos"}), 500
 
 
 @admin_bp.route('/partidos/<id_partido>/marcador', methods=['PATCH'])

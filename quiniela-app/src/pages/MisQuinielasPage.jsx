@@ -212,7 +212,7 @@ export default function MisQuinielasPage() {
   const [resultadosId, setResultadosId] = useState(null);
 
   const cached = getCache("mis-quinielas");
-  const [misQuinielas, setMisQuinielas] = useState(cached ?? []);
+  const [misQuinielas, setMisQuinielas] = useState(Array.isArray(cached) ? cached : []);
   const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
@@ -221,8 +221,9 @@ export default function MisQuinielasPage() {
       .misQuinielas()
       .then((data) => {
         if (mounted) {
-          setMisQuinielas(data);
-          setCache("mis-quinielas", data);
+          const list = Array.isArray(data) ? data : [];
+          setMisQuinielas(list);
+          setCache("mis-quinielas", list);
         }
       })
       .catch(() => {})
