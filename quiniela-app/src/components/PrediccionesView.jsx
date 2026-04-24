@@ -172,7 +172,7 @@ function ResultBadge({ hit }) {
 /* ─── Prediction button color configs ────────────────────────────── */
 const BTN_COLORS = {
   L: {
-    idle:     "bg-[#f8fffe] border-[#d4f0e0] text-[#25854f] hover:bg-[#f0faf5] hover:border-[#3dbb78]",
+    idle:     "bg-transparent border-[#e4e4e0] text-[#6b6b6b] hover:bg-[#fafaf8]",
     selected: "bg-[#e8f8f0] border-[#3dbb78] text-[#1a6b3f] shadow-[inset_0_0_0_1px_rgba(61,187,120,0.3)]",
     hit:      "bg-[#3dbb78] border-[#3dbb78] text-white shadow-[0_6px_18px_rgba(61,187,120,0.5)] scale-[1.03]",
     miss:     "bg-[#fff0f0] border-[#fca5a5] text-[#ef4444]",
@@ -180,7 +180,7 @@ const BTN_COLORS = {
     dot:      "bg-[#3dbb78]",
   },
   E: {
-    idle:     "bg-[#fffdf5] border-[#f0ddb0] text-[#9a6a00] hover:bg-[#fff8e0] hover:border-[#f4a030]",
+    idle:     "bg-transparent border-[#e4e4e0] text-[#6b6b6b] hover:bg-[#fafaf8]",
     selected: "bg-[#fff4d6] border-[#f4a030] text-[#7a4a00] shadow-[inset_0_0_0_1px_rgba(244,160,48,0.3)]",
     hit:      "bg-[#f4a030] border-[#f4a030] text-white shadow-[0_6px_18px_rgba(244,160,48,0.5)] scale-[1.03]",
     miss:     "bg-[#fff0f0] border-[#fca5a5] text-[#ef4444]",
@@ -188,7 +188,7 @@ const BTN_COLORS = {
     dot:      "bg-[#f4a030]",
   },
   V: {
-    idle:     "bg-[#f8fffe] border-[#d4f0e0] text-[#25854f] hover:bg-[#f0faf5] hover:border-[#3dbb78]",
+    idle:     "bg-transparent border-[#e4e4e0] text-[#6b6b6b] hover:bg-[#fafaf8]",
     selected: "bg-[#e8f8f0] border-[#3dbb78] text-[#1a6b3f] shadow-[inset_0_0_0_1px_rgba(61,187,120,0.3)]",
     hit:      "bg-[#168fe5] border-[#168fe5] text-white shadow-[0_6px_18px_rgba(22,143,229,0.5)] scale-[1.03]",
     miss:     "bg-[#fff0f0] border-[#fca5a5] text-[#ef4444]",
@@ -408,75 +408,58 @@ export function PrediccionesView({
             </span>
           </div>
 
-          {/* Wildcard banner doble */}
-          <div className={cn(
-            "flex items-center gap-3 rounded-xl px-4 py-3.5 mb-2 border transition-all duration-300",
-            wildcardMatch
-              ? "bg-gradient-to-r from-[#fff8ec] to-[#fff3d6] border-[#f4a030]/40 shadow-sm"
-              : "bg-[#fafaf8] border-[#ede9e0]"
-          )}>
+          {/* Comodines mini cards — una sola fila */}
+          <div className="flex gap-2 mb-2">
+            {/* Comodín Doble */}
             <div className={cn(
-              "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0",
-              wildcardMatch ? "bg-[#f4a030]" : "bg-[#f4a030]/12"
+              "flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all duration-200",
+              wildcardMatch ? "bg-[#fff8f0] border-[#f4a030]/50" : "bg-[#fafaf8] border-[#e4e4e0]"
             )}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={wildcardMatch ? "white" : "#f4a030"} stroke="none">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-black text-[#1a1a1a] leading-tight" style={{ fontFamily: font }}>
-                Comodín Doble
+              <div className={cn(
+                "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
+                wildcardMatch ? "bg-[#f4a030]" : "bg-[#fff8f0]"
+              )}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={wildcardMatch ? "white" : "#f4a030"} stroke="none">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
               </div>
-              <div className="text-[11px] font-semibold text-[#9a6a00] mt-0.5 truncate" style={{ fontFamily: font }}>
-                {wildcardMatch
-                  ? `Activo — ${wildcardMatch.local} vs ${wildcardMatch.visitante}`
-                  : "Selecciona 2 resultados en un mismo partido"}
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] font-black text-[#1a1a1a] leading-none" style={{ fontFamily: font }}>Doble selección</div>
+                <div className="text-[10px] font-semibold text-[#6b6b6b] mt-0.5 truncate" style={{ fontFamily: font }}>
+                  {wildcardMatch ? `${wildcardMatch.local} vs ${wildcardMatch.visitante}` : "Elige 2 en 1 partido"}
+                </div>
               </div>
+              {wildcardMatch && (
+                <div className="flex-shrink-0 w-4 h-4 bg-[#f4a030] rounded-full flex items-center justify-center">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              )}
             </div>
-            <div className={cn(
-              "flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide",
-              wildcardMatch
-                ? "bg-[#f4a030] text-white"
-                : "bg-[#f4a030]/15 text-[#9a6a00]"
-            )}>
-              {wildcardMatch ? "ACTIVO" : "1 disp."}
-            </div>
-          </div>
 
-          {/* Wildcard banner x2 */}
-          {partidos.length >= 3 && (
-            <div className={cn(
-              "flex items-center gap-3 rounded-xl px-4 py-3.5 mb-2 border transition-all duration-300",
-              x2Match
-                ? "bg-gradient-to-r from-[#f0fdf7] to-[#dcfce7] border-[#059669]/35 shadow-sm"
-                : "bg-[#f8fffe] border-[#c8edd8]"
-            )}>
+            {/* Comodín ×2 */}
+            {partidos.length >= 3 && (
               <div className={cn(
-                "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0",
-                x2Match ? "bg-[#059669]" : "bg-[#059669]/12"
+                "flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-all duration-200",
+                x2Match ? "bg-[#f0fdf4] border-[#3dbb78]/50" : "bg-[#fafaf8] border-[#e4e4e0]"
               )}>
-                <span className="text-[13px] font-black" style={{ color: x2Match ? "white" : "#059669" }}>×2</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-black text-[#1a1a1a] leading-tight" style={{ fontFamily: font }}>
-                  Comodín ×2
+                <div className={cn(
+                  "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[12px] font-black",
+                  x2Match ? "bg-[#059669] text-white" : "bg-[#f0fdf4] text-[#059669]"
+                )}>×2</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] font-black text-[#1a1a1a] leading-none" style={{ fontFamily: font }}>Puntos dobles</div>
+                  <div className="text-[10px] font-semibold text-[#6b6b6b] mt-0.5 truncate" style={{ fontFamily: font }}>
+                    {x2Match ? `${x2Match.local} vs ${x2Match.visitante}` : "Elige 1 partido"}
+                  </div>
                 </div>
-                <div className="text-[11px] font-semibold text-[#065f46] mt-0.5 truncate" style={{ fontFamily: font }}>
-                  {x2Match
-                    ? `Activo — ${x2Match.local} vs ${x2Match.visitante}`
-                    : "Doble puntos en el partido que elijas"}
-                </div>
+                {x2Match && (
+                  <div className="flex-shrink-0 w-4 h-4 bg-[#059669] rounded-full flex items-center justify-center">
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                )}
               </div>
-              <div className={cn(
-                "flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide",
-                x2Match
-                  ? "bg-[#059669] text-white"
-                  : "bg-[#059669]/15 text-[#065f46]"
-              )}>
-                {x2Match ? "ACTIVO" : "1 disp."}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* ── Partido cards ── */}
           {partidos.map((p, idx) => {
@@ -685,14 +668,18 @@ export function PrediccionesView({
                     )}
                     style={{ fontFamily: font }}
                   >
-                    <span className="text-[13px] font-black leading-none">×2</span>
-                    <span className="tracking-wide">
-                      {x2MatchId === String(p.id) ? "Comodín ×2 Activado" : "Usar Comodín ×2 aquí"}
-                    </span>
-                    {x2MatchId === String(p.id) && (
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                    {x2MatchId === String(p.id) ? (
+                      <>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span className="tracking-wide">Comodín ×2 Activado</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[13px] font-black leading-none">×2</span>
+                        <span className="tracking-wide">Usar Comodín ×2 aquí</span>
+                      </>
                     )}
                   </button>
                 )}

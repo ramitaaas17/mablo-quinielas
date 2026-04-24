@@ -463,28 +463,34 @@ export default function InvitacionPage() {
                 </div>
               </div>
               {/* Participants */}
-              <div style={{ display: "flex" }}>
-                {[["#d6f5e8","#25854f"], ["#fde8d8","#a05a00"], ["#fce8e8","#7c3aed"]].map(([bg, color], i) => (
-                  <div key={i} style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid white", background: bg, color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, marginLeft: i === 0 ? 0 : -6, fontFamily: font }}>
-                    {["CR","JL","MA"][i]}
-                  </div>
+              <div style={{ display: "flex", flexShrink: 0 }}>
+                {(quiniela.participantes || []).slice(0, 4).map((p, i) => (
+                  p.foto_perfil ? (
+                    <img key={i} src={p.foto_perfil} alt={p.nombre}
+                      style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid white", objectFit: "cover", marginLeft: i === 0 ? 0 : -6 }}
+                    />
+                  ) : (
+                    <div key={i} style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid white", background: [["#d6f5e8","#25854f"],["#fde8d8","#a05a00"],["#e8e8ff","#4040cc"],["#fce8e8","#7c3aed"]][i % 4][0], color: [["#d6f5e8","#25854f"],["#fde8d8","#a05a00"],["#e8e8ff","#4040cc"],["#fce8e8","#7c3aed"]][i % 4][1], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, marginLeft: i === 0 ? 0 : -6, fontFamily: font }}>
+                      {p.initials || "?"}
+                    </div>
+                  )
                 ))}
-                {quiniela.num_jugadores > 3 && (
+                {quiniela.num_jugadores > 4 && (
                   <div style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid white", background: "#f2f2ef", color: "#6b6b6b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, marginLeft: -6, fontFamily: font }}>
-                    +{quiniela.num_jugadores - 3}
+                    +{quiniela.num_jugadores - 4}
                   </div>
                 )}
               </div>
             </div>
 
             {/* Stats */}
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {[
                 { label: "Bolsa estimada", value: formatPozo(quiniela.pozo_acumulado || quiniela.precio_entrada * (quiniela.num_jugadores || 1)), sub: `${quiniela.num_jugadores} jugadores`, dark: true },
                 { label: "Entrada",       value: formatPozo(quiniela.precio_entrada), sub: "por jugador" },
                 { label: "Cierre",        value: formatFechaCorta(quiniela.cierre).split("·")[0].trim(), sub: formatFechaCorta(quiniela.cierre).split("·")[1]?.trim() },
               ].map((s, idx) => (
-                <div key={s.label} className="animate-fade-in-up" style={{ flex: 1, animationDelay: `${0.3 + idx * 0.08}s` }}>
+                <div key={s.label} className="animate-fade-in-up" style={{ flex: "1 1 80px", minWidth: 80, animationDelay: `${0.3 + idx * 0.08}s` }}>
                   <StatBox {...s} />
                 </div>
               ))}
@@ -505,13 +511,13 @@ export default function InvitacionPage() {
             </div>
 
             {/* Partidos info */}
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {[
                 { icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#6b6b6b" strokeWidth="1.2"><rect x="2" y="2" width="10" height="10" rx="2" /><path d="M2 6h10 M6 6v6" /></svg>, text: `${quiniela.num_partidos} partidos` },
                 { icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#6b6b6b" strokeWidth="1.2" strokeLinecap="round"><circle cx="7" cy="5" r="3" /><path d="M2 13c0-2.8 2.2-5 5-5s5 2.2 5 5" /></svg>, text: `${quiniela.num_jugadores} participantes` },
                 { icon: <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.8 4 4.2.6-3.1 3 .7 4.4L7 11.2l-3.6 1.8.7-4.4L1 5.6l4.2-.6L7 1z" stroke="#6b6b6b" strokeWidth="1.2" strokeLinejoin="round" /></svg>, text: "1 comodín" },
               ].map(({ icon, text }, idx) => (
-                <div key={idx} style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, background: "#f2f2ef", border: "1px solid #e4e4e0", borderRadius: 10, padding: "8px 10px" }}>
+                <div key={idx} style={{ flex: "1 1 80px", display: "flex", alignItems: "center", gap: 6, background: "#f2f2ef", border: "1px solid #e4e4e0", borderRadius: 10, padding: "8px 10px" }}>
                   <div style={{ display: "flex", alignItems: "center" }}>{icon}</div>
                   <span style={{ fontSize: 11, fontWeight: 700, color: "#6b6b6b", fontFamily: font }}>{text}</span>
                 </div>

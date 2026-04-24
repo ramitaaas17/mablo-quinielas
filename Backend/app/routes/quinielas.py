@@ -198,6 +198,18 @@ def info_invitacion(codigo):
     num_partidos = Partido.query.filter_by(id_quiniela=q.id_quiniela, cancelado=False).count()
     num_jugadores = UsuarioQuiniela.query.filter_by(id_quiniela=q.id_quiniela).count()
 
+    participantes_q = db.session.query(Usuario).join(
+        UsuarioQuiniela, UsuarioQuiniela.id_usr == Usuario.id_usr
+    ).filter(UsuarioQuiniela.id_quiniela == q.id_quiniela).limit(5).all()
+    participantes = [
+        {
+            "nombre": u.nombre_completo,
+            "foto_perfil": u.foto_perfil or None,
+            "initials": (u.nombre_completo or "??")[:2].upper(),
+        }
+        for u in participantes_q
+    ]
+
     return jsonify({
         "codigo": inv.codigo,
         "id_quiniela": str(q.id_quiniela),
@@ -210,6 +222,7 @@ def info_invitacion(codigo):
         "imagen_fondo": q.imagen_fondo,
         "num_partidos": num_partidos,
         "num_jugadores": num_jugadores,
+        "participantes": participantes,
     }), 200
 
 
